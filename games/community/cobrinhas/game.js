@@ -395,6 +395,7 @@
   }
   canvas.onpointerdown = (e) => {
     if (!running || paused) return;
+    if (e.pointerType !== "mouse" && fieldPointer !== null && fieldPointer !== e.pointerId) return;
     fieldPointer = e.pointerId;
     canvas.focus({ preventScroll: true });
     canvas.setPointerCapture(e.pointerId);
@@ -417,8 +418,9 @@
   canvas.onpointerup =
     canvas.onpointercancel =
     canvas.onlostpointercapture =
-      () => {
-        window.GardenControls?.end();
+      (e) => {
+        window.GardenControls?.end(e);
+        if (e && fieldPointer !== e.pointerId) return;
         fieldPointer = null;
         boost = false;
         mouseBoost = false;
@@ -690,9 +692,10 @@
     ctx.globalAlpha = 1;
     ctx.restore();
     // A small map makes it easier to find food and the other snakes.
-    const size = width < 700 ? 64 : 120,
+    const compactMap = width < 700 || height < 500,
+      size = height < 500 ? 48 : compactMap ? 58 : 120,
       x = 18,
-      y = width < 700 ? 88 : 20;
+      y = height < 500 ? 58 : compactMap ? 84 : 20;
     ctx.fillStyle = "#200637bb";
     ctx.beginPath();
     ctx.roundRect(x - 8, y - 20, size + 16, size + 30, 16);
@@ -1043,3 +1046,4 @@
   };
   requestAnimationFrame(frame);
 })();
+
