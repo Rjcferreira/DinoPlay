@@ -243,7 +243,8 @@
     last = 0,
     particles = [],
     shake = 0,
-    shotTransition = false;
+    shotTransition = false,
+    landscapeSide = "landscape-primary";
   const dinos = [
     {
       id: "dash",
@@ -1555,6 +1556,24 @@
       if (document.fullscreenElement) await document.exitFullscreen?.();
     } catch {}
   }
+  async function rotateLandscapeSide() {
+    landscapeSide =
+      landscapeSide === "landscape-primary"
+        ? "landscape-secondary"
+        : "landscape-primary";
+    try {
+      if (!document.fullscreenElement)
+        await document.documentElement.requestFullscreen?.();
+    } catch {}
+    try {
+      await screen.orientation?.lock?.(landscapeSide);
+    } catch {
+      try {
+        await screen.orientation?.lock?.("landscape");
+      } catch {}
+    }
+    resize();
+  }
   $("play").onclick = () => {
     levelIndex = Math.min(unlocked - 1, levels.length - 1);
     prepareIntro();
@@ -1578,6 +1597,7 @@
     $("sound").textContent = soundOn ? "🔊" : "🔇";
     tone(440);
   };
+  $("rotateScreen").onclick = rotateLandscapeSide;
   $("next").onclick = () => {
     levelIndex = Math.min(levels.length - 1, levelIndex + 1);
     prepareIntro();

@@ -168,7 +168,7 @@
     {
       "id": "dinolaunch",
       "name": "DinoLaunch",
-      "version": "1.4.2",
+      "version": "1.4.3",
       "runtime": "sandbox",
       "entry": "games/community/dinolaunch/index.html",
       "category": "puzzle",

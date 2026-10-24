@@ -59,6 +59,15 @@ canvas {
   font-weight: 900;
   box-shadow: 0 5px 0 rgba(4, 23, 41, 0.25);
 }
+.rotate-control {
+  display: none;
+  color: #d9ff72;
+}
+@media (pointer: coarse) {
+  .rotate-control {
+    display: block;
+  }
+}
 .level-pill,
 .score {
   height: 48px;
