@@ -65,8 +65,10 @@ export class DiscordGateway {
     if (
       this.socket &&
       [WebSocket.OPEN, WebSocket.CONNECTING].includes(this.socket.readyState)
-    )
+    ) {
+      if (this.socket.readyState === WebSocket.OPEN) this.sendPresence();
       return;
+    }
     this.connecting = true;
     await this.setStatus({ connected: false, state: "connecting" });
     try {
@@ -136,10 +138,15 @@ export class DiscordGateway {
     if (packet.op === 0 && packet.t === "READY") {
       this.sessionId = packet.d.session_id;
       this.resumeUrl = `${packet.d.resume_gateway_url}/?v=10&encoding=json`;
+      const guildIds = (packet.d.guilds || []).map((guild) => guild.id);
+      this.sendPresence();
       await this.setStatus({
         connected: true,
         state: "ready",
         user: packet.d.user?.username || "DinoBot",
+        userId: packet.d.user?.id || null,
+        guildConnected: guildIds.includes(this.env.DISCORD_GUILD_ID),
+        guildCount: guildIds.length,
         readyAt: new Date().toISOString(),
         error: null,
       });
@@ -170,14 +177,22 @@ export class DiscordGateway {
           browser: "DinoPlay",
           device: "DinoPlay",
         },
-        presence: {
-          since: null,
-          activities: [{ name: "as aventuras DinoPlay", type: 3 }],
-          status: "online",
-          afk: false,
-        },
+        presence: this.presence(),
       },
     });
+  }
+
+  presence() {
+    return {
+      since: null,
+      activities: [{ name: "DinoPlay", type: 0 }],
+      status: "online",
+      afk: false,
+    };
+  }
+
+  sendPresence() {
+    this.send({ op: 3, d: this.presence() });
   }
 
   sendResume() {
