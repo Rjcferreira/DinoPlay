@@ -26,8 +26,8 @@ requireText(sdk,"has:id=>request('entitlements:has'",'SDK de direitos pagos sem 
 requireText(schema,'"entitlements"','permissão de extras no manifesto');
 requireText(schema,'"extras"','declaração de extras no manifesto');
 requireText(await read('contributor-kit/game-template/game.js'),'translations[context.language]||translations.en','fallback inglês no modelo de jogo');
-requireText(worker,"url.pathname.endsWith('/version.json')",'atualização da aplicação');
-requireText(worker,"url.pathname.endsWith('/games/catalog.json')",'atualização do catálogo');
+requireText(worker,'url.pathname.endsWith("/version.json")','atualização da aplicação');
+requireText(worker,'url.pathname.endsWith("/games/catalog.json")','atualização do catálogo');
 requireText(index,'parental.js?v=1','proteção parental carregada');
 requireText(index,'Content-Security-Policy','política de segurança da aplicação');
 requireText(index,'connect-src \'self\' https://dinoplay-multiplayer.dinoplay-multiplayer.workers.dev wss://dinoplay-multiplayer.dinoplay-multiplayer.workers.dev','ligações limitadas ao serviço multiplayer');
@@ -37,7 +37,7 @@ requireText(multiplayerWorker,"url.pathname==='/friends/account'&&request.method
 requireText(multiplayerWorker,'activeCode:${device}','invalidação do código de amizade anterior');
 requireText(multiplayerWorker,'activeSession:${device}','invalidação da sessão anterior');
 requireText(privacy,'Política de privacidade','política de privacidade pública');
-requireText(worker,"'./privacy.html','./about.html'",'páginas institucionais disponíveis offline');
+requireText(worker,'FILES.push("./privacy.html", "./about.html")','páginas institucionais disponíveis offline');
 requireText(worker,'c.addAll(FILES)','instalação atómica dos ficheiros essenciais');
 requireText(about,'Pais a construir para os nossos filhos','origem e missão do DinoPlay');
 requireText(about,'https://discord.gg/f22q9cQYNp','ligação pública da comunidade');
