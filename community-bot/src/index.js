@@ -23,6 +23,33 @@ async function gatewayStatus(env) {
   }
 }
 
+async function discordGuildStatus(env) {
+  if (!env.DISCORD_BOT_TOKEN || !env.DISCORD_GUILD_ID)
+    return { installed: false, status: "not-configured" };
+  try {
+    const response = await fetch(
+      `${DISCORD_API}/users/@me/guilds/${env.DISCORD_GUILD_ID}/member`,
+      { headers: { authorization: `Bot ${env.DISCORD_BOT_TOKEN}` } },
+    );
+    if (response.ok) {
+      const member = await response.json();
+      return {
+        installed: true,
+        status: "member",
+        userId: member.user?.id || null,
+        username: member.user?.username || null,
+      };
+    }
+    return { installed: false, status: `discord-http-${response.status}` };
+  } catch (error) {
+    return {
+      installed: false,
+      status: "request-failed",
+      error: safeText(error.message, 120),
+    };
+  }
+}
+
 export class DiscordGateway {
   constructor(ctx, env) {
     this.ctx = ctx;
@@ -1003,6 +1030,7 @@ export default {
           mcpConfigured: !!env.MCP_BEARER_TOKEN,
           auditConfigured: !!env.AUDIT,
           discordGateway: await gatewayStatus(env),
+          discordGuild: await discordGuildStatus(env),
         });
       if (request.method === "POST" && url.pathname === "/discord/interactions")
         return handleDiscord(request, env);
