@@ -349,6 +349,18 @@ canvas {
   display: none;
 }
 @media (orientation: portrait) and (max-width: 900px) and (pointer: coarse) {
+  body.force-landscape #app {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vh;
+    height: 100vw;
+    transform: rotate(90deg) translateY(-100%);
+    transform-origin: top left;
+  }
+  body.force-landscape .rotate-guard {
+    display: none;
+  }
   .rotate-guard {
     position: fixed;
     z-index: 100;

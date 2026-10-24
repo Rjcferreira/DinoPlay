@@ -1539,6 +1539,8 @@
     show("levels");
   }
   async function enterLandscapePlay() {
+    document.body.classList.add("force-landscape");
+    requestAnimationFrame(resize);
     try {
       if (!document.fullscreenElement)
         await document.documentElement.requestFullscreen?.();
@@ -1549,12 +1551,14 @@
     resize();
   }
   async function leaveLandscapePlay() {
+    document.body.classList.remove("force-landscape");
     try {
       screen.orientation?.unlock?.();
     } catch {}
     try {
       if (document.fullscreenElement) await document.exitFullscreen?.();
     } catch {}
+    requestAnimationFrame(resize);
   }
   async function rotateLandscapeSide() {
     landscapeSide =
