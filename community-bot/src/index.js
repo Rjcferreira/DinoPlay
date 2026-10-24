@@ -28,16 +28,15 @@ async function discordGuildStatus(env) {
     return { installed: false, status: "not-configured" };
   try {
     const response = await fetch(
-      `${DISCORD_API}/users/@me/guilds/${env.DISCORD_GUILD_ID}/member`,
+      `${DISCORD_API}/guilds/${env.DISCORD_GUILD_ID}`,
       { headers: { authorization: `Bot ${env.DISCORD_BOT_TOKEN}` } },
     );
     if (response.ok) {
-      const member = await response.json();
+      const guild = await response.json();
       return {
         installed: true,
         status: "member",
-        userId: member.user?.id || null,
-        username: member.user?.username || null,
+        guildId: guild.id || null,
       };
     }
     return { installed: false, status: `discord-http-${response.status}` };
