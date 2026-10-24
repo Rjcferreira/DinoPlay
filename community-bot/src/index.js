@@ -1,6 +1,258 @@
 import { verifyKey } from "discord-interactions";
 
 const DISCORD_API = "https://discord.com/api/v10";
+const DISCORD_GATEWAY_URL = "wss://gateway.discord.gg/?v=10&encoding=json";
+
+function gatewayStub(env) {
+  if (!env.DISCORD_GATEWAY) return null;
+  return env.DISCORD_GATEWAY.getByName("dinoplay-community-bot");
+}
+
+async function gatewayStatus(env) {
+  const stub = gatewayStub(env);
+  if (!stub) return { configured: false, connected: false };
+  try {
+    const response = await stub.fetch("https://gateway.internal/status");
+    return await response.json();
+  } catch (error) {
+    return {
+      configured: true,
+      connected: false,
+      error: safeText(error.message, 120),
+    };
+  }
+}
+
+export class DiscordGateway {
+  constructor(ctx, env) {
+    this.ctx = ctx;
+    this.env = env;
+    this.socket = null;
+    this.heartbeatTimer = null;
+    this.reconnectTimer = null;
+    this.sequence = null;
+    this.sessionId = null;
+    this.resumeUrl = null;
+    this.lastHeartbeatAck = true;
+    this.connecting = false;
+    this.reconnectAttempt = 0;
+  }
+
+  async fetch(request) {
+    const path = new URL(request.url).pathname;
+    if (path === "/ensure") {
+      await this.ensureConnected();
+      return json({ ok: true });
+    }
+    if (path === "/status") {
+      const stored = (await this.ctx.storage.get("status")) || {};
+      return json({
+        ...stored,
+        configured: !!this.env.DISCORD_BOT_TOKEN,
+        connected: this.socket?.readyState === WebSocket.OPEN,
+        connecting: this.connecting,
+      });
+    }
+    return json({ error: "not-found" }, 404);
+  }
+
+  async alarm() {
+    await this.ensureConnected();
+  }
+
+  async ensureConnected() {
+    if (!this.env.DISCORD_BOT_TOKEN || this.connecting) return;
+    if (
+      this.socket &&
+      [WebSocket.OPEN, WebSocket.CONNECTING].includes(this.socket.readyState)
+    )
+      return;
+    this.connecting = true;
+    await this.setStatus({ connected: false, state: "connecting" });
+    try {
+      const socket = new WebSocket(this.resumeUrl || DISCORD_GATEWAY_URL);
+      this.socket = socket;
+      socket.addEventListener("open", () => {
+        this.connecting = false;
+        this.reconnectAttempt = 0;
+      });
+      socket.addEventListener("message", (event) =>
+        this.ctx.waitUntil(this.handleMessage(event.data)),
+      );
+      socket.addEventListener("close", (event) =>
+        this.ctx.waitUntil(this.handleClose(event.code, event.reason)),
+      );
+      socket.addEventListener("error", () =>
+        this.ctx.waitUntil(
+          this.setStatus({ connected: false, state: "socket-error" }),
+        ),
+      );
+    } catch (error) {
+      this.connecting = false;
+      await this.setStatus({
+        connected: false,
+        state: "connect-error",
+        error: safeText(error.message, 200),
+      });
+      this.scheduleReconnect();
+    }
+  }
+
+  async handleMessage(raw) {
+    let packet;
+    try {
+      packet = JSON.parse(typeof raw === "string" ? raw : await raw.text());
+    } catch {
+      return;
+    }
+    if (packet.s !== null && packet.s !== undefined) this.sequence = packet.s;
+    if (packet.op === 10) {
+      this.startHeartbeat(packet.d.heartbeat_interval);
+      if (this.sessionId && this.resumeUrl) this.sendResume();
+      else this.sendIdentify();
+      return;
+    }
+    if (packet.op === 11) {
+      this.lastHeartbeatAck = true;
+      return;
+    }
+    if (packet.op === 1) {
+      this.sendHeartbeat();
+      return;
+    }
+    if (packet.op === 7) {
+      this.socket?.close(4000, "Discord requested reconnect");
+      return;
+    }
+    if (packet.op === 9) {
+      if (!packet.d) {
+        this.sessionId = null;
+        this.resumeUrl = null;
+        this.sequence = null;
+      }
+      this.socket?.close(4000, "Invalid session");
+      return;
+    }
+    if (packet.op === 0 && packet.t === "READY") {
+      this.sessionId = packet.d.session_id;
+      this.resumeUrl = `${packet.d.resume_gateway_url}/?v=10&encoding=json`;
+      await this.setStatus({
+        connected: true,
+        state: "ready",
+        user: packet.d.user?.username || "DinoBot",
+        readyAt: new Date().toISOString(),
+        error: null,
+      });
+    }
+    if (packet.op === 0 && packet.t === "RESUMED") {
+      await this.setStatus({
+        connected: true,
+        state: "resumed",
+        readyAt: new Date().toISOString(),
+        error: null,
+      });
+    }
+  }
+
+  send(payload) {
+    if (this.socket?.readyState === WebSocket.OPEN)
+      this.socket.send(JSON.stringify(payload));
+  }
+
+  sendIdentify() {
+    this.send({
+      op: 2,
+      d: {
+        token: this.env.DISCORD_BOT_TOKEN,
+        intents: 0,
+        properties: {
+          os: "cloudflare",
+          browser: "DinoPlay",
+          device: "DinoPlay",
+        },
+        presence: {
+          since: null,
+          activities: [{ name: "as aventuras DinoPlay", type: 3 }],
+          status: "online",
+          afk: false,
+        },
+      },
+    });
+  }
+
+  sendResume() {
+    this.send({
+      op: 6,
+      d: {
+        token: this.env.DISCORD_BOT_TOKEN,
+        session_id: this.sessionId,
+        seq: this.sequence,
+      },
+    });
+  }
+
+  startHeartbeat(interval) {
+    clearTimeout(this.heartbeatTimer);
+    this.heartbeatTimer = setTimeout(
+      () => {
+        this.sendHeartbeat();
+        this.scheduleHeartbeat(interval);
+      },
+      Math.floor(Math.random() * interval),
+    );
+  }
+
+  scheduleHeartbeat(interval) {
+    clearTimeout(this.heartbeatTimer);
+    this.heartbeatTimer = setTimeout(() => {
+      if (!this.lastHeartbeatAck) {
+        this.socket?.close(4000, "Heartbeat not acknowledged");
+        return;
+      }
+      this.sendHeartbeat();
+      this.scheduleHeartbeat(interval);
+    }, interval);
+  }
+
+  sendHeartbeat() {
+    this.lastHeartbeatAck = false;
+    this.send({ op: 1, d: this.sequence });
+  }
+
+  async handleClose(code, reason) {
+    clearTimeout(this.heartbeatTimer);
+    this.socket = null;
+    this.connecting = false;
+    if ([4004, 4010, 4011, 4012, 4013, 4014].includes(code)) {
+      await this.setStatus({
+        connected: false,
+        state: "fatal",
+        error: `Discord closed the connection (${code}): ${safeText(reason, 120)}`,
+      });
+      return;
+    }
+    await this.setStatus({
+      connected: false,
+      state: "reconnecting",
+      error: `Connection closed (${code})`,
+    });
+    this.scheduleReconnect();
+  }
+
+  scheduleReconnect() {
+    clearTimeout(this.reconnectTimer);
+    const delay = Math.min(60_000, 1_000 * 2 ** this.reconnectAttempt++);
+    this.reconnectTimer = setTimeout(() => this.ensureConnected(), delay);
+    this.ctx.storage.setAlarm(Date.now() + Math.max(delay, 60_000));
+  }
+
+  async setStatus(status) {
+    await this.ctx.storage.put("status", {
+      ...status,
+      updatedAt: new Date().toISOString(),
+    });
+  }
+}
 const GITHUB_API = "https://api.github.com";
 const json = (value, status = 200, headers = {}) =>
   new Response(JSON.stringify(value), {
@@ -735,6 +987,7 @@ export default {
           ),
           mcpConfigured: !!env.MCP_BEARER_TOKEN,
           auditConfigured: !!env.AUDIT,
+          discordGateway: await gatewayStatus(env),
         });
       if (request.method === "POST" && url.pathname === "/discord/interactions")
         return handleDiscord(request, env);
@@ -747,6 +1000,10 @@ export default {
       console.error(error);
       return json({ error: "internal-error" }, 500);
     }
+  },
+  async scheduled(_controller, env, ctx) {
+    const stub = gatewayStub(env);
+    if (stub) ctx.waitUntil(stub.fetch("https://gateway.internal/ensure"));
   },
 };
 

@@ -29,10 +29,15 @@
     "DISCORD_ROLE_ARTIST": "1294952775029100575",
     "DISCORD_ROLE_TESTER": "1294952626500407386",
     "DISCORD_ROLE_CONTRIBUTOR": "1379751287003811870",
-    "DISCORD_ROLE_COMMUNITY": "1294951529006235739"
+    "DISCORD_ROLE_COMMUNITY": "1294951529006235739",
   },
   "kv_namespaces": [
-    { "binding": "AUDIT", "id": "dc2409ed239549248006a96ffebc93d5" }
+    { "binding": "AUDIT", "id": "dc2409ed239549248006a96ffebc93d5" },
   ],
-  "observability": { "enabled": true }
+  "durable_objects": {
+    "bindings": [{ "name": "DISCORD_GATEWAY", "class_name": "DiscordGateway" }],
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["DiscordGateway"] }],
+  "triggers": { "crons": ["*/5 * * * *"] },
+  "observability": { "enabled": true },
 }
