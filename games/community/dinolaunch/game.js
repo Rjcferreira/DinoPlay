@@ -263,9 +263,6 @@
       return [dino.id, image];
     }),
   );
-  const eggImage = new Image();
-  eggImage.decoding = "async";
-  eggImage.src = "characters/egg-nest.png";
   const scenes = [
     {
       top: "#50c9ff",
@@ -989,25 +986,81 @@
   function drawBot(o) {
     ctx.save();
     ctx.translate(o.x, o.y);
-    ctx.fillStyle = "#ffe05c";
-    ctx.strokeStyle = "#7d5813";
-    ctx.lineWidth = 5;
+
+    // The target is drawn directly on the canvas so it remains sharp at every
+    // resolution and participates naturally in the level physics.
+    ctx.shadowColor = "rgba(48, 35, 20, .3)";
+    ctx.shadowBlur = 9;
+    ctx.shadowOffsetY = 7;
+    const shell = ctx.createRadialGradient(-8, -12, 3, 2, 4, o.r * 1.25);
+    shell.addColorStop(0, "#fffef0");
+    shell.addColorStop(0.48, "#f7e7bd");
+    shell.addColorStop(1, "#c99c62");
+    ctx.fillStyle = shell;
+    ctx.strokeStyle = "#8b6238";
+    ctx.lineWidth = 3;
     ctx.beginPath();
-    ctx.arc(0, 0, o.r, 0, Math.PI * 2);
+    ctx.moveTo(0, -o.r * 1.18);
+    ctx.bezierCurveTo(
+      o.r * 0.56,
+      -o.r * 1.05,
+      o.r * 0.9,
+      -o.r * 0.22,
+      o.r * 0.82,
+      o.r * 0.45,
+    );
+    ctx.bezierCurveTo(
+      o.r * 0.74,
+      o.r * 1.05,
+      o.r * 0.35,
+      o.r * 1.25,
+      0,
+      o.r * 1.25,
+    );
+    ctx.bezierCurveTo(
+      -o.r * 0.35,
+      o.r * 1.25,
+      -o.r * 0.74,
+      o.r * 1.05,
+      -o.r * 0.82,
+      o.r * 0.45,
+    );
+    ctx.bezierCurveTo(
+      -o.r * 0.9,
+      -o.r * 0.22,
+      -o.r * 0.56,
+      -o.r * 1.05,
+      0,
+      -o.r * 1.18,
+    );
+    ctx.closePath();
     ctx.fill();
     ctx.stroke();
-    ctx.fillStyle = "#314b55";
-    ctx.fillRect(-19, -9, 38, 18);
-    ctx.fillStyle = "#ff5d5d";
+
+    ctx.shadowColor = "transparent";
+    ctx.fillStyle = "rgba(118, 76, 40, .38)";
+    for (const spot of [
+      [-10, -2, 5],
+      [11, 12, 4],
+      [5, -20, 3.5],
+      [-7, 22, 3],
+    ]) {
+      ctx.beginPath();
+      ctx.ellipse(
+        spot[0],
+        spot[1],
+        spot[2],
+        spot[2] * 0.75,
+        -0.3,
+        0,
+        Math.PI * 2,
+      );
+      ctx.fill();
+    }
+    ctx.fillStyle = "rgba(255,255,255,.68)";
     ctx.beginPath();
-    ctx.arc(-10, 0, 5, 0, Math.PI * 2);
-    ctx.arc(10, 0, 5, 0, Math.PI * 2);
+    ctx.ellipse(-9, -17, 5, 10, 0.45, 0, Math.PI * 2);
     ctx.fill();
-    ctx.strokeStyle = "#7d5813";
-    ctx.beginPath();
-    ctx.moveTo(-12, 16);
-    ctx.lineTo(12, 16);
-    ctx.stroke();
     ctx.restore();
   }
   function roundRect(x, y, w, h, r) {
@@ -1188,15 +1241,6 @@
       shake *= 0.88;
     }
     background();
-    if (eggImage.complete && eggImage.naturalWidth) {
-      const eggX = 1115 - (levelIndex % 3) * 32;
-      ctx.save();
-      ctx.shadowColor = "rgba(8,44,76,.24)";
-      ctx.shadowBlur = 12;
-      ctx.shadowOffsetY = 6;
-      ctx.drawImage(eggImage, eggX - 78, GROUND - 105, 156, 130);
-      ctx.restore();
-    }
     drawSling();
     for (const o of objects) {
       if (o.type === "block") drawBlock(o);

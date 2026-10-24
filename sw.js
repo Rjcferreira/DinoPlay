@@ -1,4 +1,4 @@
-const CACHE = "dinoplay-core-v141";
+const CACHE = "dinoplay-core-v142";
 const FILES = [
   "./",
   "./index.html",
