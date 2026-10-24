@@ -636,6 +636,15 @@ async function registerDiscordCommands(env) {
   });
   return registered;
 }
+
+async function ensureDiscordCommands(env) {
+  const versionKey = "discord:commands:version";
+  const expectedVersion = "2";
+  if (env.AUDIT && (await env.AUDIT.get(versionKey)) === expectedVersion)
+    return;
+  await registerDiscordCommands(env);
+  if (env.AUDIT) await env.AUDIT.put(versionKey, expectedVersion);
+}
 async function handleDiscord(request, env) {
   const signature = request.headers.get("x-signature-ed25519"),
     timestamp = request.headers.get("x-signature-timestamp"),
@@ -1046,6 +1055,7 @@ export default {
   async scheduled(_controller, env, ctx) {
     const stub = gatewayStub(env);
     if (stub) ctx.waitUntil(stub.fetch("https://gateway.internal/ensure"));
+    ctx.waitUntil(ensureDiscordCommands(env));
   },
 };
 
