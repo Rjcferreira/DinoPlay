@@ -46,7 +46,7 @@
     {
       "id": "race",
       "name": "Cidade das Aventuras",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "runtime": "native",
       "entry": "race",
       "category": "explore",
@@ -58,7 +58,7 @@
       "offline": true,
       "assets": [
         "racer.css?v=14",
-        "racer.js?v=51",
+        "racer.js?v=52",
         "multiplayer-core.js?v=3",
         "multiplayer.js?v=9",
         "assets/three.module.js",
