@@ -221,7 +221,8 @@
     settle = 0,
     last = 0,
     particles = [],
-    shake = 0;
+    shake = 0,
+    shotTransition = false;
   const dinos = [
     {
       id: "dash",
@@ -262,6 +263,131 @@
       return [dino.id, image];
     }),
   );
+  const eggImage = new Image();
+  eggImage.decoding = "async";
+  eggImage.src = "characters/egg-nest.png";
+  const scenes = [
+    {
+      top: "#50c9ff",
+      bottom: "#dff9ff",
+      ground: "#63ca45",
+      far: "#3fa65a",
+      accent: "#ffe46b",
+      kind: "meadow",
+    },
+    {
+      top: "#7b72ef",
+      bottom: "#ffc8a8",
+      ground: "#5fc94b",
+      far: "#486aa8",
+      accent: "#ffd36c",
+      kind: "sunrise",
+    },
+    {
+      top: "#1ea4d8",
+      bottom: "#bbf3ed",
+      ground: "#3abf65",
+      far: "#187b68",
+      accent: "#a9f0ff",
+      kind: "waterfall",
+    },
+    {
+      top: "#4db9f4",
+      bottom: "#eefcff",
+      ground: "#54bd3e",
+      far: "#27894a",
+      accent: "#ff8d79",
+      kind: "jungle",
+    },
+    {
+      top: "#f28f68",
+      bottom: "#ffe5a5",
+      ground: "#559d3b",
+      far: "#765c6b",
+      accent: "#fff0a0",
+      kind: "sunset",
+    },
+    {
+      top: "#55b8e8",
+      bottom: "#fff0b9",
+      ground: "#dcb550",
+      far: "#c77c3b",
+      accent: "#fff4a3",
+      kind: "dunes",
+    },
+    {
+      top: "#2cb7c9",
+      bottom: "#d8ffcf",
+      ground: "#d5aa49",
+      far: "#a65b35",
+      accent: "#55d7b0",
+      kind: "oasis",
+    },
+    {
+      top: "#e46d52",
+      bottom: "#ffd0a0",
+      ground: "#c99045",
+      far: "#8e4539",
+      accent: "#ffd072",
+      kind: "canyon",
+    },
+    {
+      top: "#7bcfe8",
+      bottom: "#fff1c8",
+      ground: "#d7b25e",
+      far: "#a47751",
+      accent: "#aee9ec",
+      kind: "ruins",
+    },
+    {
+      top: "#162c63",
+      bottom: "#8b4d80",
+      ground: "#9a713e",
+      far: "#342d59",
+      accent: "#fff3ba",
+      kind: "desert-night",
+    },
+    {
+      top: "#7cdcff",
+      bottom: "#eefcff",
+      ground: "#d8f7ff",
+      far: "#79bad3",
+      accent: "#ffffff",
+      kind: "glacier",
+    },
+    {
+      top: "#172b63",
+      bottom: "#4879a8",
+      ground: "#cdeeff",
+      far: "#315d7a",
+      accent: "#6fffd8",
+      kind: "aurora",
+    },
+    {
+      top: "#b9ebff",
+      bottom: "#ffffff",
+      ground: "#dff8ff",
+      far: "#8bc7dc",
+      accent: "#82d9ff",
+      kind: "frozen-lake",
+    },
+    {
+      top: "#6baad8",
+      bottom: "#e8f8ff",
+      ground: "#d4f3fb",
+      far: "#4d809d",
+      accent: "#dff8ff",
+      kind: "snow-pines",
+    },
+    {
+      top: "#384b7a",
+      bottom: "#f29c7d",
+      ground: "#cfeaf1",
+      far: "#5a6275",
+      accent: "#ffb35f",
+      kind: "ice-volcano",
+    },
+  ];
   const materials = {
     wood: { color: "#d69a54", edge: "#8b572d", hp: 85 },
     stone: { color: "#8da6b1", edge: "#526976", hp: 150 },
@@ -438,6 +564,7 @@
     maxShots = l.shots;
     settle = 0;
     shake = 0;
+    shotTransition = false;
     for (const item of l.items) {
       if (item.t)
         objects.push({
@@ -500,6 +627,19 @@
       trail: [],
     };
     projectiles.push(current);
+  }
+  function endCurrentShot() {
+    if (shotTransition || !running) return;
+    shotTransition = true;
+    if (current) current.alive = false;
+    current = null;
+    setTimeout(() => {
+      shotTransition = false;
+      if (!running) return;
+      spawnDino();
+      if (!current) finish(false);
+      else textHint();
+    }, 420);
   }
   function textHint() {
     const d = dinos.find((x) => x.id === levels[levelIndex].dino);
@@ -655,8 +795,9 @@
         p.vx *= 0.72;
         if (Math.abs(p.vy) < 25) p.vy = 0;
       }
-      if (p.x < -100 || p.x > W + 200 || p.y > H + 100) {
+      if (p.x < -70 || p.x > W + 70 || p.y > H + 70 || p.y < -260) {
         p.alive = false;
+        if (p === current) endCurrentShot();
         continue;
       }
       for (const o of objects) {
@@ -739,16 +880,7 @@
     if (!bots) {
       settle += dt;
       if (settle > 0.9) finish(true);
-    } else if (current?.launched && current.rest > 1.1) {
-      current.alive = false;
-      current = null;
-      setTimeout(() => {
-        if (running) {
-          spawnDino();
-          if (!current) finish(false);
-        }
-      }, 350);
-    }
+    } else if (current?.launched && current.rest > 1.1) endCurrentShot();
   }
   function finish(win) {
     if (!running) return;
@@ -910,44 +1042,101 @@
       ctx.stroke();
     }
   }
-  function background(world) {
-    const sky = ["#79dbff", "#f7c873", "#b6eaff"][world],
-      ground = ["#67ca47", "#e3b64d", "#d8f7ff"][world],
-      far = ["#45a958", "#d7873d", "#79bad3"][world];
+  function background() {
+    const scene = scenes[levelIndex] || scenes[0],
+      sky = ctx.createLinearGradient(0, 0, 0, GROUND);
+    sky.addColorStop(0, scene.top);
+    sky.addColorStop(1, scene.bottom);
     ctx.fillStyle = sky;
     ctx.fillRect(0, 0, W, H);
-    ctx.fillStyle = "rgba(255,255,255,.78)";
-    for (const c of [
-      [190, 130, 85],
-      [490, 90, 60],
-      [970, 145, 95],
-    ]) {
+    const sunX = 150 + ((levelIndex * 227) % 980),
+      sunY = 95 + ((levelIndex * 37) % 105);
+    ctx.fillStyle = scene.accent;
+    ctx.globalAlpha = 0.9;
+    ctx.beginPath();
+    ctx.arc(sunX, sunY, 46 + (levelIndex % 3) * 7, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = "rgba(255,255,255,.72)";
+    for (let i = 0; i < 3; i++) {
+      const x = ((170 + i * 390 + levelIndex * 83) % 1380) - 50,
+        y = 95 + ((i * 47 + levelIndex * 23) % 145),
+        width = 55 + ((levelIndex + i) % 3) * 22;
       ctx.beginPath();
-      ctx.ellipse(c[0], c[1], c[2], 26, 0, 0, Math.PI * 2);
+      ctx.ellipse(x, y, width, 20 + i * 3, 0, 0, Math.PI * 2);
       ctx.fill();
     }
-    ctx.fillStyle = far;
+    ctx.fillStyle = scene.far;
     ctx.beginPath();
     ctx.moveTo(0, 520);
-    for (let x = 0; x <= W; x += 160)
-      ctx.lineTo(x, 420 + Math.sin(x * 0.011 + world) * 55);
+    for (let x = 0; x <= W; x += 120)
+      ctx.lineTo(
+        x,
+        420 +
+          Math.sin(x * 0.009 + levelIndex * 0.8) * (45 + (levelIndex % 4) * 10),
+      );
     ctx.lineTo(W, GROUND);
     ctx.lineTo(0, GROUND);
     ctx.fill();
-    ctx.fillStyle = ground;
-    ctx.fillRect(0, GROUND, W, H - GROUND);
-    ctx.fillStyle = world === 2 ? "#8dd3e8" : "rgba(39,111,48,.28)";
-    ctx.fillRect(0, GROUND, W, 8);
-    if (world === 1) {
-      ctx.fillStyle = "#c87935";
-      for (let x = 350; x < 1200; x += 260) {
+    if (["waterfall", "oasis", "frozen-lake"].includes(scene.kind)) {
+      ctx.fillStyle = scene.kind === "oasis" ? "#3cc5b5" : "#66d6ee";
+      ctx.beginPath();
+      ctx.ellipse(700, 585, 260, 44, -0.08, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "rgba(255,255,255,.65)";
+      ctx.lineWidth = 5;
+      ctx.beginPath();
+      ctx.moveTo(500, 580);
+      ctx.quadraticCurveTo(700, 605, 900, 575);
+      ctx.stroke();
+    }
+    if (["jungle", "snow-pines"].includes(scene.kind)) {
+      for (let x = 310; x < 1180; x += 185) {
+        ctx.fillStyle = scene.kind === "snow-pines" ? "#285f63" : "#176b45";
         ctx.beginPath();
-        ctx.moveTo(x, GROUND);
-        ctx.lineTo(x + 80, 490);
-        ctx.lineTo(x + 150, GROUND);
+        ctx.moveTo(x, 565);
+        ctx.lineTo(x + 48, 455 - (x % 3) * 12);
+        ctx.lineTo(x + 96, 565);
+        ctx.fill();
+        if (scene.kind === "snow-pines") {
+          ctx.strokeStyle = "#e8fbff";
+          ctx.lineWidth = 7;
+          ctx.beginPath();
+          ctx.moveTo(x + 28, 510);
+          ctx.lineTo(x + 48, 465);
+          ctx.lineTo(x + 70, 510);
+          ctx.stroke();
+        }
+      }
+    }
+    if (["ruins", "canyon", "ice-volcano"].includes(scene.kind)) {
+      ctx.fillStyle = scene.kind === "ice-volcano" ? "#596273" : "#99583d";
+      for (let x = 350; x < 1200; x += 270) {
+        ctx.beginPath();
+        ctx.moveTo(x, 560);
+        ctx.lineTo(x + 65, 390 + (x % 5) * 12);
+        ctx.lineTo(x + 140, 560);
         ctx.fill();
       }
     }
+    if (scene.kind === "aurora") {
+      ctx.strokeStyle = "rgba(111,255,216,.55)";
+      ctx.lineWidth = 28;
+      ctx.beginPath();
+      ctx.moveTo(150, 110);
+      ctx.bezierCurveTo(380, 10, 570, 260, 820, 80);
+      ctx.bezierCurveTo(980, 0, 1080, 100, 1220, 40);
+      ctx.stroke();
+    }
+    if (scene.kind === "desert-night") {
+      ctx.fillStyle = "#fff8cf";
+      for (let i = 0; i < 32; i++)
+        ctx.fillRect((i * 173) % W, 45 + ((i * 67) % 280), 3, 3);
+    }
+    ctx.fillStyle = scene.ground;
+    ctx.fillRect(0, GROUND, W, H - GROUND);
+    ctx.fillStyle = "rgba(24,84,71,.24)";
+    ctx.fillRect(0, GROUND, W, 8);
   }
   function drawSling() {
     ctx.strokeStyle = "#70421f";
@@ -998,7 +1187,16 @@
       );
       shake *= 0.88;
     }
-    background(levels[levelIndex]?.world || 0);
+    background();
+    if (eggImage.complete && eggImage.naturalWidth) {
+      const eggX = 1115 - (levelIndex % 3) * 32;
+      ctx.save();
+      ctx.shadowColor = "rgba(8,44,76,.24)";
+      ctx.shadowBlur = 12;
+      ctx.shadowOffsetY = 6;
+      ctx.drawImage(eggImage, eggX - 78, GROUND - 105, 156, 130);
+      ctx.restore();
+    }
     drawSling();
     for (const o of objects) {
       if (o.type === "block") drawBlock(o);

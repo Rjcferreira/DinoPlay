@@ -1,14 +1,14 @@
 {
   "id": "dinolaunch",
   "name": "DinoLaunch",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "runtime": "sandbox",
   "entry": "games/community/dinolaunch/index.html",
   "category": "puzzle",
   "age": "5+",
   "cover": "games/community/dinolaunch/cover.png",
   "description": "Lança dinossauros, derruba construções e salva os ovos em 15 desafios de física.",
-  "size": "10 MB",
+  "size": "12 MB",
   "multiplayer": false,
   "offline": true,
   "assets": [
@@ -19,6 +19,7 @@
     "games/community/dinolaunch/characters/rico-trex.png",
     "games/community/dinolaunch/characters/tuca-triceratops.png",
     "games/community/dinolaunch/characters/pipa-pteranodon.png",
+    "games/community/dinolaunch/characters/egg-nest.png",
     "sdk/dinoplay-game-sdk.js"
   ],
   "permissions": ["storage"],
