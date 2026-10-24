@@ -107,7 +107,8 @@
   footer.textContent =
     "🔒 Sem anúncios · Sem chat · Progresso guardado neste dispositivo";
   document.title = "DinoPlay";
-  document.querySelector("#updateStatus").textContent = "DinoPlay v5.45";
+  document.querySelector("#updateStatus").textContent =
+    `DinoPlay v${window.DINOPLAY_VERSION || "—"}`;
   host.classList.add("platform-home");
   host.innerHTML = `<div class="dp-head"><div><small>OLÁ, EXPLORADOR!</small><h1>Dino<span>Play</span></h1><p>A tua biblioteca de aventuras</p></div><img class="dp-mascot" src="assets/dinoplay-mascot.png" alt="Dinossauro DinoPlay"></div><div id="dpView"></div><span id="puzzleMenuProgress" hidden></span><span id="blockMenuProgress" hidden></span><nav class="dp-nav"><button data-tab="home" class="active">🏠<small>Início</small></button><button data-tab="library">🎮<small>Biblioteca</small></button><button data-tab="parents">👨‍👩‍👧<small>Pais</small></button></nav>`;
   let tab = "home",
@@ -222,7 +223,13 @@
     });
   }
   async function syncParentFriends() {
-    if (friendSyncBusy || !parentOpen || tab !== "parents" || !platform.onlineMultiplayerEnabled) return;
+    if (
+      friendSyncBusy ||
+      !parentOpen ||
+      tab !== "parents" ||
+      !platform.onlineMultiplayerEnabled
+    )
+      return;
     friendSyncBusy = true;
     const before = friendSnapshot();
     try {
@@ -283,19 +290,45 @@
     if (!title) return;
     const nav = document.createElement("div");
     nav.className = "dp-parent-pages";
-    nav.innerHTML = [["security", "🔐", "Segurança"], ["friends", "👨‍👩‍👧", "Amigos"], ["games", "🎮", "Jogos"], ["extras", "🛍️", "Extras"], ["privacy", "🛡️", "Privacidade"]].map(([id, icon, label]) => `<button type="button" data-parent-page="${id}" class="${parentPage === id ? "active" : ""}">${icon} ${safeText(tr(label))}</button>`).join("");
+    nav.innerHTML = [
+      ["security", "🔐", "Segurança"],
+      ["friends", "👨‍👩‍👧", "Amigos"],
+      ["games", "🎮", "Jogos"],
+      ["extras", "🛍️", "Extras"],
+      ["privacy", "🛡️", "Privacidade"],
+    ]
+      .map(
+        ([id, icon, label]) =>
+          `<button type="button" data-parent-page="${id}" class="${parentPage === id ? "active" : ""}">${icon} ${safeText(tr(label))}</button>`,
+      )
+      .join("");
     title.after(nav);
     const section = title.parentElement;
     const groups = {
-      security: section.querySelectorAll(":scope > .dp-recovery-notice, :scope > .dp-pin-settings, :scope > .dp-parent-setting"),
-      friends: section.querySelectorAll(":scope > .dp-child-profile, :scope > .dp-friends"),
-      games: section.querySelectorAll(":scope > .dp-parent-note, :scope > .dp-manage, :scope > .dp-privacy"),
+      security: section.querySelectorAll(
+        ":scope > .dp-recovery-notice, :scope > .dp-pin-settings, :scope > .dp-parent-setting",
+      ),
+      friends: section.querySelectorAll(
+        ":scope > .dp-child-profile, :scope > .dp-friends",
+      ),
+      games: section.querySelectorAll(
+        ":scope > .dp-parent-note, :scope > .dp-manage, :scope > .dp-privacy",
+      ),
     };
-    Object.entries(groups).forEach(([id, nodes]) => nodes.forEach((node) => node.classList.toggle("hidden", parentPage !== id)));
-    if (parentPage === "extras") nav.insertAdjacentHTML("afterend", parentExtrasMarkup());
-    if (parentPage === "privacy") nav.insertAdjacentHTML("afterend", parentPrivacyMarkup());
+    Object.entries(groups).forEach(([id, nodes]) =>
+      nodes.forEach((node) =>
+        node.classList.toggle("hidden", parentPage !== id),
+      ),
+    );
+    if (parentPage === "extras")
+      nav.insertAdjacentHTML("afterend", parentExtrasMarkup());
+    if (parentPage === "privacy")
+      nav.insertAdjacentHTML("afterend", parentPrivacyMarkup());
     if (parentPage === "friends" && !platform.onlineMultiplayerEnabled)
-      nav.insertAdjacentHTML("afterend", '<div class="dp-parent-note">🔒 Ativa primeiro o multiplayer na página Segurança.</div>');
+      nav.insertAdjacentHTML(
+        "afterend",
+        '<div class="dp-parent-note">🔒 Ativa primeiro o multiplayer na página Segurança.</div>',
+      );
   }
   function render() {
     document.body.classList.add("dp-shell");
@@ -342,7 +375,9 @@
       nextParentPin: "Novo PIN",
       childNicknameInput: "Nome ou apelido",
       friendCodeInput: "Código do outro responsável",
-    }).forEach(([id, label]) => document.querySelector(`#${id}`)?.setAttribute("aria-label", tr(label)));
+    }).forEach(([id, label]) =>
+      document.querySelector(`#${id}`)?.setAttribute("aria-label", tr(label)),
+    );
     document.querySelectorAll("[data-go]").forEach(
       (b) =>
         (b.onclick = () => {
@@ -388,69 +423,88 @@
           .catch(() => {});
       }
     };
-    document.querySelector("#parentSetup")?.addEventListener("click", async () => {
-      const pin = document.querySelector("#newParentPin").value,
-        confirmation = document.querySelector("#confirmParentPin").value,
-        error = document.querySelector("#parentError");
-      if (!parental?.validPin(pin)) {
-        error.textContent = tr("Escolhe um PIN com 4 a 6 números.");
-        return;
-      }
-      if (pin !== confirmation) {
-        error.textContent = tr("Os dois PIN não são iguais.");
-        return;
-      }
-      try {
-        parentRecoveryCode = await parental.setup(pin);
-        finishParentUnlock();
-      } catch {
-        error.textContent = tr("Não foi possível criar o PIN neste dispositivo.");
-      }
-    });
-    document.querySelector("#parentUnlock")?.addEventListener("click", async () => {
-      const error = document.querySelector("#parentError"),
-        button = document.querySelector("#parentUnlock");
-      button.disabled = true;
-      try {
-        if (await parental.verify(document.querySelector("#parentPin").value))
+    document
+      .querySelector("#parentSetup")
+      ?.addEventListener("click", async () => {
+        const pin = document.querySelector("#newParentPin").value,
+          confirmation = document.querySelector("#confirmParentPin").value,
+          error = document.querySelector("#parentError");
+        if (!parental?.validPin(pin)) {
+          error.textContent = tr("Escolhe um PIN com 4 a 6 números.");
+          return;
+        }
+        if (pin !== confirmation) {
+          error.textContent = tr("Os dois PIN não são iguais.");
+          return;
+        }
+        try {
+          parentRecoveryCode = await parental.setup(pin);
           finishParentUnlock();
-        else {
-          error.textContent = tr("PIN incorreto.");
+        } catch {
+          error.textContent = tr(
+            "Não foi possível criar o PIN neste dispositivo.",
+          );
+        }
+      });
+    document
+      .querySelector("#parentUnlock")
+      ?.addEventListener("click", async () => {
+        const error = document.querySelector("#parentError"),
+          button = document.querySelector("#parentUnlock");
+        button.disabled = true;
+        try {
+          if (await parental.verify(document.querySelector("#parentPin").value))
+            finishParentUnlock();
+          else {
+            error.textContent = tr("PIN incorreto.");
+            button.disabled = false;
+          }
+        } catch (failure) {
+          const seconds = Math.max(
+            1,
+            Math.ceil((failure.retryAfter || 0) / 1000),
+          );
+          error.textContent = `Demasiadas tentativas. Espera ${seconds} segundos.`;
           button.disabled = false;
         }
-      } catch (failure) {
-        const seconds = Math.max(1, Math.ceil((failure.retryAfter || 0) / 1000));
-        error.textContent = `Demasiadas tentativas. Espera ${seconds} segundos.`;
-        button.disabled = false;
-      }
-    });
-    document.querySelector("#showRecovery")?.addEventListener("click", () =>
-      document.querySelector("#recoveryBox").classList.toggle("hidden"),
-    );
-    document.querySelector("#recoverParent")?.addEventListener("click", async () => {
-      const ok = await parental.verify(
-        document.querySelector("#parentRecovery").value,
-        true,
+      });
+    document
+      .querySelector("#showRecovery")
+      ?.addEventListener("click", () =>
+        document.querySelector("#recoveryBox").classList.toggle("hidden"),
       );
-      if (ok) finishParentUnlock();
-      else document.querySelector("#parentError").textContent = tr("Código de recuperação inválido.");
-    });
+    document
+      .querySelector("#recoverParent")
+      ?.addEventListener("click", async () => {
+        const ok = await parental.verify(
+          document.querySelector("#parentRecovery").value,
+          true,
+        );
+        if (ok) finishParentUnlock();
+        else
+          document.querySelector("#parentError").textContent = tr(
+            "Código de recuperação inválido.",
+          );
+      });
     document.querySelector("#recoverySaved")?.addEventListener("click", () => {
       parentRecoveryCode = "";
       render();
     });
-    document.querySelector("#changeParentPin")?.addEventListener("click", async () => {
-      const current = document.querySelector("#currentParentPin").value,
-        next = document.querySelector("#nextParentPin").value;
-      if (!parental.validPin(next)) return toast("O novo PIN deve ter 4 a 6 números.", "bad");
-      try {
-        parentRecoveryCode = await parental.change(current, next);
-        render();
-        toast("✅ PIN parental alterado");
-      } catch {
-        toast("PIN atual incorreto.", "bad");
-      }
-    });
+    document
+      .querySelector("#changeParentPin")
+      ?.addEventListener("click", async () => {
+        const current = document.querySelector("#currentParentPin").value,
+          next = document.querySelector("#nextParentPin").value;
+        if (!parental.validPin(next))
+          return toast("O novo PIN deve ter 4 a 6 números.", "bad");
+        try {
+          parentRecoveryCode = await parental.change(current, next);
+          render();
+          toast("✅ PIN parental alterado");
+        } catch {
+          toast("PIN atual incorreto.", "bad");
+        }
+      });
     document.querySelector("#parentLock")?.addEventListener("click", () => {
       parentOpen = false;
       pendingInstall = null;
@@ -498,7 +552,9 @@
         const box = document.querySelector("#friendCodeResult"),
           message = document.querySelector("#friendMessage");
         if (!childNickname()) {
-          message.textContent = tr("Primeiro guarda o nome ou apelido da criança.");
+          message.textContent = tr(
+            "Primeiro guarda o nome ou apelido da criança.",
+          );
           return;
         }
         message.textContent = tr("A gerar código seguro…");
@@ -506,7 +562,9 @@
           const data = await window.DinoPlayMultiplayer.createFriendCode();
           box.classList.remove("hidden");
           box.textContent = data.code;
-          message.textContent = tr("Envia este código ao outro responsável. Expira em 2 minutos e só funciona uma vez.");
+          message.textContent = tr(
+            "Envia este código ao outro responsável. Expira em 2 minutos e só funciona uma vez.",
+          );
         } catch (e) {
           message.textContent =
             e.code === "profile-required"
@@ -531,15 +589,21 @@
           button = document.querySelector("#friendCodeAccept"),
           code = input.value.trim().toLowerCase();
         if (!childNickname()) {
-          message.textContent = tr("Primeiro guarda o nome ou apelido da criança.");
+          message.textContent = tr(
+            "Primeiro guarda o nome ou apelido da criança.",
+          );
           return;
         }
         if (!/^[a-z0-9]{11}$/.test(code)) {
-          message.textContent = tr("Introduz o código completo de 11 caracteres.");
+          message.textContent = tr(
+            "Introduz o código completo de 11 caracteres.",
+          );
           return;
         }
         button.disabled = true;
-        message.textContent = tr("A confirmar autorização dos dois responsáveis…");
+        message.textContent = tr(
+          "A confirmar autorização dos dois responsáveis…",
+        );
         try {
           await window.DinoPlayMultiplayer.acceptFriendCode(code);
           render();
@@ -580,31 +644,42 @@
           }
         }),
     );
-    document.querySelector("#deleteMultiplayerProfile")?.addEventListener("click", async () => {
-      const button = document.querySelector("#deleteMultiplayerProfile"),
-        message = document.querySelector("#profileDeleteMessage");
-      if (!profileDeleteConfirm) {
-        profileDeleteConfirm = true;
-        render();
-        return;
-      }
-      button.disabled = true;
-      message.textContent = tr("A apagar o perfil multiplayer…");
-      try {
-        await window.DinoPlayMultiplayer.deleteProfile();
-        ["multiplayerDeviceId", "multiplayerDeviceSecret", "authorizedFriends", "authorizedFriendProfiles", "childNickname"].forEach((key) => delete platform[key]);
-        platform.onlineMultiplayerEnabled = false;
-        savePlatform();
-        profileDeleteConfirm = false;
-        parentPage = "privacy";
-        render();
-        toast("✅ Perfil multiplayer apagado");
-      } catch {
-        profileDeleteConfirm = false;
-        render();
-        toast("Não foi possível apagar o perfil. Verifica a Internet.", "bad");
-      }
-    });
+    document
+      .querySelector("#deleteMultiplayerProfile")
+      ?.addEventListener("click", async () => {
+        const button = document.querySelector("#deleteMultiplayerProfile"),
+          message = document.querySelector("#profileDeleteMessage");
+        if (!profileDeleteConfirm) {
+          profileDeleteConfirm = true;
+          render();
+          return;
+        }
+        button.disabled = true;
+        message.textContent = tr("A apagar o perfil multiplayer…");
+        try {
+          await window.DinoPlayMultiplayer.deleteProfile();
+          [
+            "multiplayerDeviceId",
+            "multiplayerDeviceSecret",
+            "authorizedFriends",
+            "authorizedFriendProfiles",
+            "childNickname",
+          ].forEach((key) => delete platform[key]);
+          platform.onlineMultiplayerEnabled = false;
+          savePlatform();
+          profileDeleteConfirm = false;
+          parentPage = "privacy";
+          render();
+          toast("✅ Perfil multiplayer apagado");
+        } catch {
+          profileDeleteConfirm = false;
+          render();
+          toast(
+            "Não foi possível apagar o perfil. Verifica a Internet.",
+            "bad",
+          );
+        }
+      });
     document.querySelectorAll("[data-remove]").forEach(
       (b) =>
         (b.onclick = () => {
@@ -699,11 +774,16 @@
     }
     render();
     if (updated === pending.length)
-      toast(`✅ ${updated === 1 ? "Jogo atualizado" : `${updated} jogos atualizados`}`);
+      toast(
+        `✅ ${updated === 1 ? "Jogo atualizado" : `${updated} jogos atualizados`}`,
+      );
     else if (updated)
       toast(`✅ ${updated} atualizado(s) · os restantes serão tentados depois`);
     else
-      toast("Não foi possível atualizar os jogos agora. A versão anterior foi mantida.", "bad");
+      toast(
+        "Não foi possível atualizar os jogos agora. A versão anterior foi mantida.",
+        "bad",
+      );
   }
   function isNewerVersion(next, current) {
     if (!current) return true;
@@ -941,8 +1021,9 @@
     if (!document.hidden) window.DinoPlayRefreshCatalog();
   });
   setInterval(() => window.DinoPlayRefreshCatalog(), 15 * 60 * 1000);
-  loadCatalog()
-    .catch(() =>
-      console.warn("DinoPlay: catálogo externo indisponível; catálogo interno ativo."),
-    );
+  loadCatalog().catch(() =>
+    console.warn(
+      "DinoPlay: catálogo externo indisponível; catálogo interno ativo.",
+    ),
+  );
 })();

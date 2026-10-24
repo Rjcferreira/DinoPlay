@@ -1,4 +1,4 @@
-const CACHE = "dinoplay-core-v146";
+const CACHE = "dinoplay-core-v147";
 const FILES = [
   "./",
   "./index.html",
@@ -7,13 +7,13 @@ const FILES = [
   "./racer.css?v=14",
   "./platform.css?v=11",
   "./game-runtime.css?v=1",
-  "./platform.js?v=19",
+  "./platform.js?v=20",
   "./language.css?v=1",
   "./i18n.js?v=5",
   "./parental.js?v=1",
   "./multiplayer-core.js?v=3",
   "./multiplayer.js?v=9",
-  "./app.js?v=111",
+  "./app.js?v=112",
   "./racer.js?v=53",
   "./games/catalog.json?v=3",
   "./sdk/dinoplay-game-sdk.js?v=2",
