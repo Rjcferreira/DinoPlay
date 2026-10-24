@@ -39,6 +39,9 @@
       ability: "Toca no ecrã durante o voo para usar o poder!",
       locked: "Completa o nível anterior",
       lost: "Tenta outra vez!",
+      rotateTitle: "Joga com o telemóvel deitado",
+      rotateText: "Este jogo funciona apenas na horizontal.",
+      rotateButton: "Rodar e jogar",
       worlds: ["Vale Verde", "Deserto Dourado", "Montanha Gelada"],
       powers: {
         dash: "Toque: Super impulso",
@@ -65,6 +68,9 @@
       ability: "Toque na tela durante o voo para usar o poder!",
       locked: "Complete a fase anterior",
       lost: "Tente novamente!",
+      rotateTitle: "Jogue com o celular deitado",
+      rotateText: "Este jogo funciona apenas na horizontal.",
+      rotateButton: "Girar e jogar",
       worlds: ["Vale Verde", "Deserto Dourado", "Montanha Gelada"],
       powers: {
         dash: "Toque: Super impulso",
@@ -91,6 +97,9 @@
       ability: "Tap the screen in flight to use the power!",
       locked: "Complete the previous level",
       lost: "Try again!",
+      rotateTitle: "Turn your phone sideways",
+      rotateText: "This game is available in landscape mode only.",
+      rotateButton: "Rotate and play",
       worlds: ["Green Valley", "Golden Desert", "Frozen Mountain"],
       powers: {
         dash: "Tap: Super dash",
@@ -117,6 +126,9 @@
       ability: "Touche l’écran en vol pour utiliser le pouvoir !",
       locked: "Termine le niveau précédent",
       lost: "Réessaie !",
+      rotateTitle: "Tourne ton téléphone",
+      rotateText: "Ce jeu fonctionne uniquement en mode paysage.",
+      rotateButton: "Tourner et jouer",
       worlds: ["Vallée Verte", "Désert Doré", "Montagne Gelée"],
       powers: {
         dash: "Toucher : Super élan",
@@ -143,6 +155,9 @@
       ability: "Tippe im Flug für die Spezialkraft!",
       locked: "Schließe das vorige Level ab",
       lost: "Versuch es noch einmal!",
+      rotateTitle: "Drehe dein Handy quer",
+      rotateText: "Dieses Spiel funktioniert nur im Querformat.",
+      rotateButton: "Drehen und spielen",
       worlds: ["Grünes Tal", "Goldene Wüste", "Eisberg"],
       powers: {
         dash: "Tippen: Superschub",
@@ -169,6 +184,9 @@
       ability: "¡Toca la pantalla durante el vuelo para usar el poder!",
       locked: "Completa el nivel anterior",
       lost: "¡Inténtalo otra vez!",
+      rotateTitle: "Gira el teléfono",
+      rotateText: "Este juego solo funciona en modo horizontal.",
+      rotateButton: "Girar y jugar",
       worlds: ["Valle Verde", "Desierto Dorado", "Montaña Helada"],
       powers: {
         dash: "Toque: Superimpulso",
@@ -195,6 +213,9 @@
       ability: "Dotknij ekranu w locie, aby użyć mocy!",
       locked: "Ukończ poprzedni poziom",
       lost: "Spróbuj ponownie!",
+      rotateTitle: "Obróć telefon poziomo",
+      rotateText: "Ta gra działa tylko w trybie poziomym.",
+      rotateButton: "Obróć i graj",
       worlds: ["Zielona Dolina", "Złota Pustynia", "Lodowa Góra"],
       powers: {
         dash: "Dotknij: Super pęd",
@@ -522,6 +543,9 @@
     $("next").textContent = text.next;
     $("retry").textContent = text.retry;
     $("resultLevels").textContent = text.levels;
+    $("rotateTitle").textContent = text.rotateTitle;
+    $("rotateText").textContent = text.rotateText;
+    $("rotateButton").textContent = text.rotateButton;
   }
   function buildLevelGrid() {
     const grid = $("levelGrid");
@@ -1560,6 +1584,7 @@
   };
   $("retry").onclick = loadLevel;
   $("resultLevels").onclick = openLevels;
+  $("rotateButton").onclick = enterLandscapePlay;
   document.addEventListener("visibilitychange", () => {
     if (document.hidden) {
       last = 0;
