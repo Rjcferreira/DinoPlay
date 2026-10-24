@@ -49,6 +49,47 @@ async function discordGuildStatus(env) {
   }
 }
 
+async function discordApplicationStatus(env) {
+  if (!env.DISCORD_BOT_TOKEN) return { reachable: false };
+  try {
+    const response = await fetch(`${DISCORD_API}/oauth2/applications/@me`, {
+      headers: { authorization: `Bot ${env.DISCORD_BOT_TOKEN}` },
+    });
+    if (!response.ok) return { reachable: false, status: response.status };
+    const application = await response.json();
+    return {
+      reachable: true,
+      applicationId: application.id,
+      interactionsEndpointUrl: application.interactions_endpoint_url || null,
+    };
+  } catch (error) {
+    return { reachable: false, error: safeText(error.message, 120) };
+  }
+}
+
+async function ensureDiscordEndpoint(env) {
+  if (!env.DISCORD_INTERACTIONS_URL) return;
+  const status = await discordApplicationStatus(env);
+  if (status.interactionsEndpointUrl === env.DISCORD_INTERACTIONS_URL) return;
+  const response = await fetch(`${DISCORD_API}/applications/@me`, {
+    method: "PATCH",
+    headers: {
+      authorization: `Bot ${env.DISCORD_BOT_TOKEN}`,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({
+      interactions_endpoint_url: env.DISCORD_INTERACTIONS_URL,
+    }),
+  });
+  if (!response.ok)
+    throw new Error(
+      `Configuração do endpoint Discord ${response.status}: ${safeText(await response.text(), 240)}`,
+    );
+  await audit(env, "discord.interactions.configure", {
+    endpoint: env.DISCORD_INTERACTIONS_URL,
+  });
+}
+
 export class DiscordGateway {
   constructor(ctx, env) {
     this.ctx = ctx;
@@ -1039,6 +1080,7 @@ export default {
           auditConfigured: !!env.AUDIT,
           discordGateway: await gatewayStatus(env),
           discordGuild: await discordGuildStatus(env),
+          discordApplication: await discordApplicationStatus(env),
         });
       if (request.method === "POST" && url.pathname === "/discord/interactions")
         return handleDiscord(request, env);
@@ -1056,6 +1098,7 @@ export default {
     const stub = gatewayStub(env);
     if (stub) ctx.waitUntil(stub.fetch("https://gateway.internal/ensure"));
     ctx.waitUntil(ensureDiscordCommands(env));
+    ctx.waitUntil(ensureDiscordEndpoint(env));
   },
 };
 
