@@ -1513,18 +1513,40 @@
     buildLevelGrid();
     show("levels");
   }
+  async function enterLandscapePlay() {
+    try {
+      if (!document.fullscreenElement)
+        await document.documentElement.requestFullscreen?.();
+    } catch {}
+    try {
+      await screen.orientation?.lock?.("landscape");
+    } catch {}
+    resize();
+  }
+  async function leaveLandscapePlay() {
+    try {
+      screen.orientation?.unlock?.();
+    } catch {}
+    try {
+      if (document.fullscreenElement) await document.exitFullscreen?.();
+    } catch {}
+  }
   $("play").onclick = () => {
     levelIndex = Math.min(unlocked - 1, levels.length - 1);
     prepareIntro();
   };
   $("levelsButton").onclick = openLevels;
   $("levelsClose").onclick = () => show("home");
-  $("startLevel").onclick = loadLevel;
+  $("startLevel").onclick = async () => {
+    await enterLandscapePlay();
+    loadLevel();
+  };
   $("restart").onclick = () => {
     if (running) loadLevel();
   };
-  $("back").onclick = () => {
+  $("back").onclick = async () => {
     running = false;
+    await leaveLandscapePlay();
     show("home");
   };
   $("sound").onclick = () => {
@@ -1543,6 +1565,13 @@
       last = 0;
       dragging = false;
     }
+  });
+  document.addEventListener("fullscreenchange", resize);
+  screen.orientation?.addEventListener?.("change", resize);
+  addEventListener("pagehide", () => {
+    try {
+      screen.orientation?.unlock?.();
+    } catch {}
   });
   async function start() {
     try {

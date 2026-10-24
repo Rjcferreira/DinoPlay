@@ -377,26 +377,94 @@ canvas {
   }
 }
 @media (orientation: landscape) and (max-height: 580px) {
+  .hud {
+    top: max(6px, env(safe-area-inset-top));
+    left: max(8px, env(safe-area-inset-left));
+    right: max(8px, env(safe-area-inset-right));
+  }
+  .round,
+  .level-pill,
+  .score {
+    height: 40px;
+  }
+  .round {
+    width: 40px;
+    border-radius: 13px;
+    font-size: 21px;
+  }
+  .screen {
+    padding: max(10px, env(safe-area-inset-top))
+      max(18px, env(safe-area-inset-right))
+      max(10px, env(safe-area-inset-bottom))
+      max(18px, env(safe-area-inset-left));
+  }
   .hero-card {
-    transform: scale(0.82);
+    width: min(76vw, 620px);
+    padding: 22px 30px 18px 150px;
+    min-height: 260px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    overflow: visible;
+  }
+  .hero-card .logo-mark {
+    left: 76px;
+    top: 50%;
+    transform: translate(-50%, -50%);
+  }
+  .hero-card h1 {
+    font-size: 48px;
+  }
+  .hero-card > p:not(.eyebrow) {
+    margin: 8px 0;
+    font-size: 15px;
+  }
+  .hero-card .primary,
+  .hero-card .secondary {
+    min-height: 43px;
+    margin-top: 8px;
   }
   .panel {
-    max-height: 88vh;
+    max-height: calc(100vh - 20px);
+    padding: 18px 25px;
   }
   .intro-card {
+    width: min(86vw, 650px);
     display: grid;
-    grid-template-columns: 100px 1fr;
-    column-gap: 14px;
+    grid-template-columns: 150px 1fr;
+    column-gap: 20px;
     text-align: left;
   }
   .intro-card .dino-badge {
-    grid-row: 1/5;
+    grid-row: 1/6;
   }
   .intro-card .primary,
   .intro-card .tip {
     grid-column: 1/3;
   }
   .result-card {
-    transform: scale(0.82);
+    width: min(78vw, 560px);
+  }
+  .result-card h2,
+  .result-card p,
+  .result-card .big-stars {
+    margin-top: 4px;
+    margin-bottom: 4px;
+  }
+  .result-card .primary,
+  .result-card .secondary,
+  .result-card .text-button {
+    min-height: 40px;
+    margin-top: 7px;
+  }
+  .level-panel {
+    width: min(88vw, 760px);
+  }
+  .level-grid {
+    grid-template-columns: repeat(8, 1fr);
+    gap: 7px;
+  }
+  .level-tile {
+    max-height: 62px;
   }
 }
