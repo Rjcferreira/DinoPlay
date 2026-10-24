@@ -16,6 +16,7 @@ const [
   privacy,
   about,
   versionFile,
+  androidManifest,
 ] = await Promise.all([
   read("platform.js"),
   read("app.js"),
@@ -28,6 +29,7 @@ const [
   read("privacy.html"),
   read("about.html"),
   read("version.json"),
+  read("mobile/android/app/src/main/AndroidManifest.xml"),
 ]);
 const requireText = (source, text, label) => {
   if (!source.includes(text))
@@ -49,7 +51,16 @@ requireText(
   "window.DINOPLAY_VERSION",
   "interface usa a versão interna atual",
 );
-requireText(index,`DinoPlay v${releaseVersion}`,'versão inicial igual à versão publicada');
+requireText(
+  index,
+  `DinoPlay v${releaseVersion}`,
+  "versão inicial igual à versão publicada",
+);
+requireText(
+  androidManifest,
+  'android:screenOrientation="fullSensor"',
+  "aplicação Android permite rotação completa pelo sensor",
+);
 
 requireText(
   platform,
