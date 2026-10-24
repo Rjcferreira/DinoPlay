@@ -40,13 +40,13 @@
         "assets/three.module.js",
         "assets/three.core.js",
         "multiplayer-core.js?v=3",
-        "multiplayer.js?v=8"
+        "multiplayer.js?v=9"
       ]
     },
     {
       "id": "race",
       "name": "Cidade das Aventuras",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "runtime": "native",
       "entry": "race",
       "category": "explore",
@@ -54,11 +54,13 @@
       "cover": "assets/dinoplay-city.png",
       "description": "Explora a cidade, ganha moedas e compra veículos.",
       "size": "9 MB",
-      "multiplayer": false,
+      "multiplayer": true,
       "offline": true,
       "assets": [
-        "racer.css?v=3",
-        "racer.js?v=15",
+        "racer.css?v=14",
+        "racer.js?v=51",
+        "multiplayer-core.js?v=3",
+        "multiplayer.js?v=9",
         "assets/three.module.js",
         "assets/three.core.js"
       ]
