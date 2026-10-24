@@ -473,6 +473,12 @@
   }
   function screenPoint(e) {
     const r = canvas.getBoundingClientRect();
+    if (document.body.classList.contains("rotate-game")) {
+      return {
+        x: ((e.clientY - r.top) * W) / r.height,
+        y: ((r.right - e.clientX) * H) / r.width,
+      };
+    }
     return {
       x: ((e.clientX - r.left) * W) / r.width,
       y: ((e.clientY - r.top) * H) / r.height,
@@ -1515,7 +1521,11 @@
   }
   function rotateGame() {
     document.body.classList.toggle("rotate-game");
-    requestAnimationFrame(resize);
+    dragging = false;
+    requestAnimationFrame(() => {
+      resize();
+      render();
+    });
   }
   $("play").onclick = () => {
     levelIndex = Math.min(unlocked - 1, levels.length - 1);
