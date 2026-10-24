@@ -230,6 +230,8 @@
       belly: "#d9f49b",
       power: 1.5,
       emoji: "🦖",
+      sprite: "characters/rico-trex.png",
+      spriteScale: 5.2,
     },
     {
       id: "heavy",
@@ -238,6 +240,8 @@
       belly: "#ffe09a",
       power: 1.2,
       emoji: "🦕",
+      sprite: "characters/tuca-triceratops.png",
+      spriteScale: 5,
     },
     {
       id: "split",
@@ -246,8 +250,18 @@
       belly: "#c8f2ff",
       power: 1.35,
       emoji: "🦎",
+      sprite: "characters/pipa-pteranodon.png",
+      spriteScale: 6.2,
     },
   ];
+  const spriteImages = Object.fromEntries(
+    dinos.map((dino) => {
+      const image = new Image();
+      image.decoding = "async";
+      image.src = dino.sprite;
+      return [dino.id, image];
+    }),
+  );
   const materials = {
     wood: { color: "#d69a54", edge: "#8b572d", hp: 85 },
     stone: { color: "#8da6b1", edge: "#526976", hp: 150 },
@@ -409,7 +423,7 @@
   function prepareIntro() {
     const l = levels[levelIndex],
       d = dinos.find((x) => x.id === l.dino);
-    $("dinoBadge").textContent = d.emoji;
+    $("dinoBadge").innerHTML = `<img src="${d.sprite}" alt="${d.name}">`;
     ui.level.textContent = levelIndex + 1;
     ui.world.textContent = text.worlds[l.world];
     show("intro");
@@ -787,6 +801,22 @@
     ctx.translate(p.x, p.y);
     const a = Math.atan2(p.vy, p.vx);
     if (p.launched) ctx.rotate(a);
+    const definition = dinos.find((dino) => dino.id === p.dino),
+      sprite = spriteImages[p.dino];
+    if (sprite?.complete && sprite.naturalWidth) {
+      const width = p.r * definition.spriteScale,
+        height = width * (sprite.naturalHeight / sprite.naturalWidth),
+        pulse = p.launched
+          ? 1
+          : 1 + Math.sin(performance.now() * 0.004) * 0.025;
+      ctx.scale(pulse, pulse);
+      ctx.shadowColor = "rgba(8,44,76,.28)";
+      ctx.shadowBlur = 10;
+      ctx.shadowOffsetY = 6;
+      ctx.drawImage(sprite, -width / 2, -height / 2, width, height);
+      ctx.restore();
+      return;
+    }
     ctx.fillStyle = p.color;
     ctx.strokeStyle = "#174e39";
     ctx.lineWidth = 5;
