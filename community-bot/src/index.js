@@ -1,50 +1,753 @@
-import { verifyKey } from 'discord-interactions';
+import { verifyKey } from "discord-interactions";
 
-const DISCORD_API='https://discord.com/api/v10';
-const GITHUB_API='https://api.github.com';
-const json=(value,status=200,headers={})=>new Response(JSON.stringify(value),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store',...headers}});
-const text=(value,status=200)=>new Response(value,{status,headers:{'content-type':'text/plain; charset=utf-8','cache-control':'no-store'}});
+const DISCORD_API = "https://discord.com/api/v10";
+const GITHUB_API = "https://api.github.com";
+const json = (value, status = 200, headers = {}) =>
+  new Response(JSON.stringify(value), {
+    status,
+    headers: {
+      "content-type": "application/json; charset=utf-8",
+      "cache-control": "no-store",
+      ...headers,
+    },
+  });
+const text = (value, status = 200) =>
+  new Response(value, {
+    status,
+    headers: {
+      "content-type": "text/plain; charset=utf-8",
+      "cache-control": "no-store",
+    },
+  });
 
-function safeText(value,max=500){return String(value??'').replace(/[\u0000-\u001f\u007f]/g,' ').replace(/\s+/g,' ').trim().slice(0,max)}
-function bytesToHex(bytes){return Array.from(bytes,b=>b.toString(16).padStart(2,'0')).join('')}
-function base64url(value){const bytes=value instanceof Uint8Array?value:new TextEncoder().encode(value);let binary='';for(const byte of bytes)binary+=String.fromCharCode(byte);return btoa(binary).replace(/=/g,'').replace(/\+/g,'-').replace(/\//g,'_')}
-function pemBytes(pem){const body=pem.replace(/-----[^-]+-----/g,'').replace(/\s+/g,'');const binary=atob(body);return Uint8Array.from(binary,c=>c.charCodeAt(0))}
-function ownerRepo(env){const [owner,repo]=String(env.GITHUB_REPOSITORY||'').split('/');if(!owner||!repo)throw new Error('GITHUB_REPOSITORY inválido');return{owner,repo}}
+function safeText(value, max = 500) {
+  return String(value ?? "")
+    .replace(/[\u0000-\u001f\u007f]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, max);
+}
+function bytesToHex(bytes) {
+  return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
+}
+function base64url(value) {
+  const bytes =
+    value instanceof Uint8Array ? value : new TextEncoder().encode(value);
+  let binary = "";
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  return btoa(binary).replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_");
+}
+function pemBytes(pem) {
+  const body = pem.replace(/-----[^-]+-----/g, "").replace(/\s+/g, "");
+  const binary = atob(body);
+  return Uint8Array.from(binary, (c) => c.charCodeAt(0));
+}
+function ownerRepo(env) {
+  const [owner, repo] = String(env.GITHUB_REPOSITORY || "").split("/");
+  if (!owner || !repo) throw new Error("GITHUB_REPOSITORY inválido");
+  return { owner, repo };
+}
 
-async function secureEqual(a,b){const [left,right]=await Promise.all([crypto.subtle.digest('SHA-256',new TextEncoder().encode(a)),crypto.subtle.digest('SHA-256',new TextEncoder().encode(b))]);const x=new Uint8Array(left),y=new Uint8Array(right);let diff=0;for(let i=0;i<x.length;i++)diff|=x[i]^y[i];return diff===0}
-async function verifyGithub(raw,signature,secret){if(!signature?.startsWith('sha256=')||!secret)return false;const key=await crypto.subtle.importKey('raw',new TextEncoder().encode(secret),{name:'HMAC',hash:'SHA-256'},false,['sign']);const signed=await crypto.subtle.sign('HMAC',key,new TextEncoder().encode(raw));return secureEqual(`sha256=${bytesToHex(new Uint8Array(signed))}`,signature)}
+async function secureEqual(a, b) {
+  const [left, right] = await Promise.all([
+    crypto.subtle.digest("SHA-256", new TextEncoder().encode(a)),
+    crypto.subtle.digest("SHA-256", new TextEncoder().encode(b)),
+  ]);
+  const x = new Uint8Array(left),
+    y = new Uint8Array(right);
+  let diff = 0;
+  for (let i = 0; i < x.length; i++) diff |= x[i] ^ y[i];
+  return diff === 0;
+}
+async function verifyGithub(raw, signature, secret) {
+  if (!signature?.startsWith("sha256=") || !secret) return false;
+  const key = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
+  const signed = await crypto.subtle.sign(
+    "HMAC",
+    key,
+    new TextEncoder().encode(raw),
+  );
+  return secureEqual(`sha256=${bytesToHex(new Uint8Array(signed))}`, signature);
+}
 
-async function githubJwt(env){if(!env.GITHUB_APP_ID||!env.GITHUB_PRIVATE_KEY)return null;const now=Math.floor(Date.now()/1000),header=base64url(JSON.stringify({alg:'RS256',typ:'JWT'})),payload=base64url(JSON.stringify({iat:now-30,exp:now+540,iss:String(env.GITHUB_APP_ID)})),data=`${header}.${payload}`,key=await crypto.subtle.importKey('pkcs8',pemBytes(env.GITHUB_PRIVATE_KEY),{name:'RSASSA-PKCS1-v1_5',hash:'SHA-256'},false,['sign']),signature=await crypto.subtle.sign('RSASSA-PKCS1-v1_5',key,new TextEncoder().encode(data));return`${data}.${base64url(new Uint8Array(signature))}`}
-async function githubToken(env){if(env.GITHUB_TOKEN)return env.GITHUB_TOKEN;const jwt=await githubJwt(env);if(!jwt||!env.GITHUB_INSTALLATION_ID)return null;const response=await fetch(`${GITHUB_API}/app/installations/${env.GITHUB_INSTALLATION_ID}/access_tokens`,{method:'POST',headers:{authorization:`Bearer ${jwt}`,accept:'application/vnd.github+json','x-github-api-version':'2026-03-10','user-agent':'DinoPlay-Community-Bot'}});if(!response.ok)throw new Error(`GitHub installation token: ${response.status}`);return(await response.json()).token}
-async function github(env,path,options={}){const token=await githubToken(env);if(!token)throw new Error('GitHub App ainda não configurada');const response=await fetch(`${GITHUB_API}${path}`,{...options,headers:{authorization:`Bearer ${token}`,accept:'application/vnd.github+json','x-github-api-version':'2026-03-10','user-agent':'DinoPlay-Community-Bot',...(options.headers||{})}});if(!response.ok)throw new Error(`GitHub ${response.status}: ${safeText(await response.text(),180)}`);return response.status===204?null:response.json()}
+async function githubJwt(env) {
+  if (!env.GITHUB_APP_ID || !env.GITHUB_PRIVATE_KEY) return null;
+  const now = Math.floor(Date.now() / 1000),
+    header = base64url(JSON.stringify({ alg: "RS256", typ: "JWT" })),
+    payload = base64url(
+      JSON.stringify({
+        iat: now - 30,
+        exp: now + 540,
+        iss: String(env.GITHUB_APP_ID),
+      }),
+    ),
+    data = `${header}.${payload}`,
+    key = await crypto.subtle.importKey(
+      "pkcs8",
+      pemBytes(env.GITHUB_PRIVATE_KEY),
+      { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
+      false,
+      ["sign"],
+    ),
+    signature = await crypto.subtle.sign(
+      "RSASSA-PKCS1-v1_5",
+      key,
+      new TextEncoder().encode(data),
+    );
+  return `${data}.${base64url(new Uint8Array(signature))}`;
+}
+async function githubToken(env) {
+  if (env.GITHUB_TOKEN) return env.GITHUB_TOKEN;
+  const jwt = await githubJwt(env);
+  if (!jwt || !env.GITHUB_INSTALLATION_ID) return null;
+  const response = await fetch(
+    `${GITHUB_API}/app/installations/${env.GITHUB_INSTALLATION_ID}/access_tokens`,
+    {
+      method: "POST",
+      headers: {
+        authorization: `Bearer ${jwt}`,
+        accept: "application/vnd.github+json",
+        "x-github-api-version": "2026-03-10",
+        "user-agent": "DinoPlay-Community-Bot",
+      },
+    },
+  );
+  if (!response.ok)
+    throw new Error(`GitHub installation token: ${response.status}`);
+  return (await response.json()).token;
+}
+async function github(env, path, options = {}) {
+  const token = await githubToken(env);
+  if (!token) throw new Error("GitHub App ainda não configurada");
+  const response = await fetch(`${GITHUB_API}${path}`, {
+    ...options,
+    headers: {
+      authorization: `Bearer ${token}`,
+      accept: "application/vnd.github+json",
+      "x-github-api-version": "2026-03-10",
+      "user-agent": "DinoPlay-Community-Bot",
+      ...(options.headers || {}),
+    },
+  });
+  if (!response.ok)
+    throw new Error(
+      `GitHub ${response.status}: ${safeText(await response.text(), 180)}`,
+    );
+  return response.status === 204 ? null : response.json();
+}
 
-async function audit(env,action,details={}){const entry={id:crypto.randomUUID(),at:new Date().toISOString(),action:safeText(action,80),details};console.log(JSON.stringify({audit:entry}));if(env.AUDIT?.put)await env.AUDIT.put(`audit:${entry.at}:${entry.id}`,JSON.stringify(entry),{expirationTtl:60*60*24*90});return entry}
-async function listAudit(env,limit=20){if(!env.AUDIT?.list)return[];const keys=await env.AUDIT.list({prefix:'audit:',limit:Math.min(50,Math.max(1,limit))});const entries=await Promise.all(keys.keys.map(k=>env.AUDIT.get(k.name,'json')));return entries.filter(Boolean).sort((a,b)=>b.at.localeCompare(a.at))}
-async function discordMessage(env,content,embeds=[],channelId=env.DISCORD_CHANNEL_ID){if(!env.DISCORD_BOT_TOKEN||!channelId)throw new Error('Canal Discord ainda não configurado');const response=await fetch(`${DISCORD_API}/channels/${channelId}/messages`,{method:'POST',headers:{authorization:`Bot ${env.DISCORD_BOT_TOKEN}`,'content-type':'application/json'},body:JSON.stringify({content:safeText(content,1900),embeds:embeds.slice(0,10),allowed_mentions:{parse:[]}})});if(!response.ok)throw new Error(`Discord ${response.status}: ${safeText(await response.text(),180)}`);return response.json()}
-function teamRoles(env){return[env.DISCORD_ROLE_FOUNDER,env.DISCORD_ROLE_COFOUNDER,env.DISCORD_ROLE_MAINTAINER].filter(Boolean)}
-function isTeamMember(interaction,env){const roles=interaction.member?.roles||[];return roles.some(role=>teamRoles(env).includes(role))}
+async function audit(env, action, details = {}) {
+  const entry = {
+    id: crypto.randomUUID(),
+    at: new Date().toISOString(),
+    action: safeText(action, 80),
+    details,
+  };
+  console.log(JSON.stringify({ audit: entry }));
+  if (env.AUDIT?.put)
+    await env.AUDIT.put(
+      `audit:${entry.at}:${entry.id}`,
+      JSON.stringify(entry),
+      { expirationTtl: 60 * 60 * 24 * 90 },
+    );
+  return entry;
+}
+async function listAudit(env, limit = 20) {
+  if (!env.AUDIT?.list) return [];
+  const keys = await env.AUDIT.list({
+    prefix: "audit:",
+    limit: Math.min(50, Math.max(1, limit)),
+  });
+  const entries = await Promise.all(
+    keys.keys.map((k) => env.AUDIT.get(k.name, "json")),
+  );
+  return entries.filter(Boolean).sort((a, b) => b.at.localeCompare(a.at));
+}
+async function discordMessage(
+  env,
+  content,
+  embeds = [],
+  channelId = env.DISCORD_CHANNEL_ID,
+) {
+  if (!env.DISCORD_BOT_TOKEN || !channelId)
+    throw new Error("Canal Discord ainda não configurado");
+  const response = await fetch(
+    `${DISCORD_API}/channels/${channelId}/messages`,
+    {
+      method: "POST",
+      headers: {
+        authorization: `Bot ${env.DISCORD_BOT_TOKEN}`,
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        content: safeText(content, 1900),
+        embeds: embeds.slice(0, 10),
+        allowed_mentions: { parse: [] },
+      }),
+    },
+  );
+  if (!response.ok)
+    throw new Error(
+      `Discord ${response.status}: ${safeText(await response.text(), 180)}`,
+    );
+  return response.json();
+}
+function teamRoles(env) {
+  return [
+    env.DISCORD_ROLE_FOUNDER,
+    env.DISCORD_ROLE_COFOUNDER,
+    env.DISCORD_ROLE_MAINTAINER,
+  ].filter(Boolean);
+}
+function isTeamMember(interaction, env) {
+  const roles = interaction.member?.roles || [];
+  return roles.some((role) => teamRoles(env).includes(role));
+}
 
-async function repositoryStatus(env){const {owner,repo}=ownerRepo(env),[repository,pulls,runs]=await Promise.all([github(env,`/repos/${owner}/${repo}`),github(env,`/repos/${owner}/${repo}/pulls?state=open&per_page=20`),github(env,`/repos/${owner}/${repo}/actions/runs?per_page=1`)]);const latest=runs.workflow_runs?.[0];return{name:repository.full_name,url:repository.html_url,openPullRequests:pulls.length,openIssues:repository.open_issues_count,defaultBranch:repository.default_branch,latestWorkflow:latest?{name:latest.name,status:latest.status,conclusion:latest.conclusion,url:latest.html_url}:null}}
-async function listPulls(env,limit=10){const {owner,repo}=ownerRepo(env),pulls=await github(env,`/repos/${owner}/${repo}/pulls?state=open&per_page=${Math.min(30,Math.max(1,limit))}`);return pulls.map(p=>({number:p.number,title:p.title,author:p.user?.login||'',draft:p.draft,url:p.html_url,updatedAt:p.updated_at}))}
-async function inspectPull(env,number){const {owner,repo}=ownerRepo(env),n=Number(number);if(!Number.isInteger(n)||n<1)throw new Error('Número de pull request inválido');const pull=await github(env,`/repos/${owner}/${repo}/pulls/${n}`),[files,checks]=await Promise.all([github(env,`/repos/${owner}/${repo}/pulls/${n}/files?per_page=100`),github(env,`/repos/${owner}/${repo}/commits/${pull.head.sha}/status`).catch(()=>null)]);return{number:pull.number,title:pull.title,body:safeText(pull.body,1500),author:pull.user?.login||'',state:pull.state,draft:pull.draft,mergeable:pull.mergeable,url:pull.html_url,changedFiles:files.map(f=>({filename:f.filename,status:f.status,changes:f.changes})),checks:checks?.state||null}}
+async function repositoryStatus(env) {
+  const { owner, repo } = ownerRepo(env),
+    [repository, pulls, runs] = await Promise.all([
+      github(env, `/repos/${owner}/${repo}`),
+      github(env, `/repos/${owner}/${repo}/pulls?state=open&per_page=20`),
+      github(env, `/repos/${owner}/${repo}/actions/runs?per_page=1`),
+    ]);
+  const latest = runs.workflow_runs?.[0];
+  return {
+    name: repository.full_name,
+    url: repository.html_url,
+    openPullRequests: pulls.length,
+    openIssues: repository.open_issues_count,
+    defaultBranch: repository.default_branch,
+    latestWorkflow: latest
+      ? {
+          name: latest.name,
+          status: latest.status,
+          conclusion: latest.conclusion,
+          url: latest.html_url,
+        }
+      : null,
+  };
+}
+async function listPulls(env, limit = 10) {
+  const { owner, repo } = ownerRepo(env),
+    pulls = await github(
+      env,
+      `/repos/${owner}/${repo}/pulls?state=open&per_page=${Math.min(30, Math.max(1, limit))}`,
+    );
+  return pulls.map((p) => ({
+    number: p.number,
+    title: p.title,
+    author: p.user?.login || "",
+    draft: p.draft,
+    url: p.html_url,
+    updatedAt: p.updated_at,
+  }));
+}
+async function inspectPull(env, number) {
+  const { owner, repo } = ownerRepo(env),
+    n = Number(number);
+  if (!Number.isInteger(n) || n < 1)
+    throw new Error("Número de pull request inválido");
+  const pull = await github(env, `/repos/${owner}/${repo}/pulls/${n}`),
+    [files, checks] = await Promise.all([
+      github(env, `/repos/${owner}/${repo}/pulls/${n}/files?per_page=100`),
+      github(
+        env,
+        `/repos/${owner}/${repo}/commits/${pull.head.sha}/status`,
+      ).catch(() => null),
+    ]);
+  return {
+    number: pull.number,
+    title: pull.title,
+    body: safeText(pull.body, 1500),
+    author: pull.user?.login || "",
+    state: pull.state,
+    draft: pull.draft,
+    mergeable: pull.mergeable,
+    url: pull.html_url,
+    changedFiles: files.map((f) => ({
+      filename: f.filename,
+      status: f.status,
+      changes: f.changes,
+    })),
+    checks: checks?.state || null,
+  };
+}
 
-function discordResponse(content,ephemeral=true){return json({type:4,data:{content:safeText(content,1900),flags:ephemeral?64:0,allowed_mentions:{parse:[]}}})}
-async function handleDiscord(request,env){const signature=request.headers.get('x-signature-ed25519'),timestamp=request.headers.get('x-signature-timestamp'),raw=await request.text();if(!env.DISCORD_PUBLIC_KEY||!signature||!timestamp||!await verifyKey(raw,signature,timestamp,env.DISCORD_PUBLIC_KEY))return text('invalid request signature',401);let interaction;try{interaction=JSON.parse(raw)}catch{return text('invalid json',400)}if(interaction.type===1)return json({type:1});if(interaction.guild_id!==env.DISCORD_GUILD_ID)return discordResponse('Este bot está disponível apenas no servidor oficial DinoPlay.');if(interaction.type!==2||interaction.data?.name!=='dinoplay')return discordResponse('Comando não suportado.');const command=interaction.data.options?.[0]?.name||'ajuda';try{if(command==='estado'){const status=await repositoryStatus(env);return discordResponse(`🦕 **${status.name}**\nPRs abertas: ${status.openPullRequests}\nIssues abertas: ${status.openIssues}\nÚltima validação: ${status.latestWorkflow?.conclusion||status.latestWorkflow?.status||'sem dados'}`)}if(command==='contribuicoes'){const pulls=await listPulls(env,8);return discordResponse(pulls.length?pulls.map(p=>`#${p.number} ${p.draft?'[rascunho] ':''}${p.title} — ${p.author}`).join('\n'):'Não existem contribuições abertas.')}return discordResponse(`Comandos: \`/dinoplay estado\`, \`/dinoplay contribuicoes\` e \`/dinoplay ajuda\`. Funções administrativas: ${isTeamMember(interaction,env)?'autorizadas para o teu cargo':'reservadas à equipa DinoPlay'}.`)}catch(error){console.error(error);return discordResponse('Não foi possível consultar o projeto neste momento. A equipa pode verificar os registos do bot.')}}
+function discordResponse(content, ephemeral = true) {
+  return json({
+    type: 4,
+    data: {
+      content: safeText(content, 1900),
+      flags: ephemeral ? 64 : 0,
+      allowed_mentions: { parse: [] },
+    },
+  });
+}
+async function registerDiscordCommands(env) {
+  if (
+    !env.DISCORD_BOT_TOKEN ||
+    !env.DISCORD_APPLICATION_ID ||
+    !env.DISCORD_GUILD_ID
+  )
+    throw new Error("Configuração Discord incompleta");
+  const commands = [
+      {
+        name: "dinoplay",
+        description: "Informação e gestão segura do projeto DinoPlay",
+        type: 1,
+        dm_permission: false,
+        options: [
+          {
+            type: 1,
+            name: "estado",
+            description: "Mostra o estado atual do projeto",
+          },
+          {
+            type: 1,
+            name: "contribuicoes",
+            description: "Lista contribuições abertas",
+          },
+          {
+            type: 1,
+            name: "ajuda",
+            description: "Mostra os comandos disponíveis",
+          },
+        ],
+      },
+    ],
+    response = await fetch(
+      `${DISCORD_API}/applications/${env.DISCORD_APPLICATION_ID}/guilds/${env.DISCORD_GUILD_ID}/commands`,
+      {
+        method: "PUT",
+        headers: {
+          authorization: `Bot ${env.DISCORD_BOT_TOKEN}`,
+          "content-type": "application/json",
+        },
+        body: JSON.stringify(commands),
+      },
+    );
+  if (!response.ok)
+    throw new Error(
+      `Registo Discord ${response.status}: ${safeText(await response.text(), 180)}`,
+    );
+  const registered = await response.json();
+  await audit(env, "discord.commands.register", {
+    commands: registered.map((command) => command.name),
+  });
+  return registered;
+}
+async function handleDiscord(request, env) {
+  const signature = request.headers.get("x-signature-ed25519"),
+    timestamp = request.headers.get("x-signature-timestamp"),
+    raw = await request.text();
+  if (
+    !env.DISCORD_PUBLIC_KEY ||
+    !signature ||
+    !timestamp ||
+    !(await verifyKey(raw, signature, timestamp, env.DISCORD_PUBLIC_KEY))
+  )
+    return text("invalid request signature", 401);
+  let interaction;
+  try {
+    interaction = JSON.parse(raw);
+  } catch {
+    return text("invalid json", 400);
+  }
+  if (interaction.type === 1) {
+    try {
+      await registerDiscordCommands(env);
+    } catch (error) {
+      console.error(error);
+    }
+    return json({ type: 1 });
+  }
+  if (interaction.guild_id !== env.DISCORD_GUILD_ID)
+    return discordResponse(
+      "Este bot está disponível apenas no servidor oficial DinoPlay.",
+    );
+  if (interaction.type !== 2 || interaction.data?.name !== "dinoplay")
+    return discordResponse("Comando não suportado.");
+  const command = interaction.data.options?.[0]?.name || "ajuda";
+  try {
+    if (command === "estado") {
+      const status = await repositoryStatus(env);
+      return discordResponse(
+        `🦕 **${status.name}**\nPRs abertas: ${status.openPullRequests}\nIssues abertas: ${status.openIssues}\nÚltima validação: ${status.latestWorkflow?.conclusion || status.latestWorkflow?.status || "sem dados"}`,
+      );
+    }
+    if (command === "contribuicoes") {
+      const pulls = await listPulls(env, 8);
+      return discordResponse(
+        pulls.length
+          ? pulls
+              .map(
+                (p) =>
+                  `#${p.number} ${p.draft ? "[rascunho] " : ""}${p.title} — ${p.author}`,
+              )
+              .join("\n")
+          : "Não existem contribuições abertas.",
+      );
+    }
+    return discordResponse(
+      `Comandos: \`/dinoplay estado\`, \`/dinoplay contribuicoes\` e \`/dinoplay ajuda\`. Funções administrativas: ${isTeamMember(interaction, env) ? "autorizadas para o teu cargo" : "reservadas à equipa DinoPlay"}.`,
+    );
+  } catch (error) {
+    console.error(error);
+    return discordResponse(
+      "Não foi possível consultar o projeto neste momento. A equipa pode verificar os registos do bot.",
+    );
+  }
+}
 
-async function handleGithub(request,env){const raw=await request.text();if(!await verifyGithub(raw,request.headers.get('x-hub-signature-256'),env.GITHUB_WEBHOOK_SECRET))return text('invalid signature',401);const event=request.headers.get('x-github-event')||'',delivery=request.headers.get('x-github-delivery')||crypto.randomUUID();let payload;try{payload=JSON.parse(raw)}catch{return text('invalid json',400)}if(event==='ping')return json({ok:true});await audit(env,`github.${event}`,{delivery,action:safeText(payload.action,40),sender:safeText(payload.sender?.login,80)});if(event==='pull_request'&&['opened','reopened','ready_for_review','closed'].includes(payload.action)){const pr=payload.pull_request,status=payload.action==='closed'?(pr.merged?'aprovada e integrada':'fechada'):payload.action==='ready_for_review'?'pronta para revisão':'recebida';await discordMessage(env,`🧩 Contribuição **#${pr.number} ${safeText(pr.title,180)}** ${status}.\n${pr.html_url}`,[],env.DISCORD_CHANNEL_PULL_REQUESTS)}else if(event==='issues'&&['opened','reopened','closed'].includes(payload.action)){const issue=payload.issue,status=payload.action==='closed'?'resolvido':payload.action==='reopened'?'reaberto':'registado';await discordMessage(env,`🐛 Problema **#${issue.number} ${safeText(issue.title,180)}** ${status}.\n${issue.html_url}`,[],env.DISCORD_CHANNEL_ISSUES)}else if(event==='workflow_run'&&payload.action==='completed'){const run=payload.workflow_run,icon=run.conclusion==='success'?'✅':'⚠️';await discordMessage(env,`${icon} Validação **${safeText(run.name,120)}** terminou: **${safeText(run.conclusion,30)}**.\n${run.html_url}`,[],env.DISCORD_CHANNEL_BUILDS)}else if(event==='release'&&payload.action==='published'){const message=`🚀 Nova versão **${safeText(payload.release.name||payload.release.tag_name,120)}** publicada.\n${payload.release.html_url}`;await Promise.all([discordMessage(env,message,[],env.DISCORD_CHANNEL_RELEASES),discordMessage(env,message,[],env.DISCORD_CHANNEL_UPDATES)])}return json({ok:true,delivery})}
+async function handleGithub(request, env) {
+  const raw = await request.text();
+  if (
+    !(await verifyGithub(
+      raw,
+      request.headers.get("x-hub-signature-256"),
+      env.GITHUB_WEBHOOK_SECRET,
+    ))
+  )
+    return text("invalid signature", 401);
+  const event = request.headers.get("x-github-event") || "",
+    delivery = request.headers.get("x-github-delivery") || crypto.randomUUID();
+  let payload;
+  try {
+    payload = JSON.parse(raw);
+  } catch {
+    return text("invalid json", 400);
+  }
+  if (event === "ping") return json({ ok: true });
+  await audit(env, `github.${event}`, {
+    delivery,
+    action: safeText(payload.action, 40),
+    sender: safeText(payload.sender?.login, 80),
+  });
+  if (
+    event === "pull_request" &&
+    ["opened", "reopened", "ready_for_review", "closed"].includes(
+      payload.action,
+    )
+  ) {
+    const pr = payload.pull_request,
+      status =
+        payload.action === "closed"
+          ? pr.merged
+            ? "aprovada e integrada"
+            : "fechada"
+          : payload.action === "ready_for_review"
+            ? "pronta para revisão"
+            : "recebida";
+    await discordMessage(
+      env,
+      `🧩 Contribuição **#${pr.number} ${safeText(pr.title, 180)}** ${status}.\n${pr.html_url}`,
+      [],
+      env.DISCORD_CHANNEL_PULL_REQUESTS,
+    );
+  } else if (
+    event === "issues" &&
+    ["opened", "reopened", "closed"].includes(payload.action)
+  ) {
+    const issue = payload.issue,
+      status =
+        payload.action === "closed"
+          ? "resolvido"
+          : payload.action === "reopened"
+            ? "reaberto"
+            : "registado";
+    await discordMessage(
+      env,
+      `🐛 Problema **#${issue.number} ${safeText(issue.title, 180)}** ${status}.\n${issue.html_url}`,
+      [],
+      env.DISCORD_CHANNEL_ISSUES,
+    );
+  } else if (event === "workflow_run" && payload.action === "completed") {
+    const run = payload.workflow_run,
+      icon = run.conclusion === "success" ? "✅" : "⚠️";
+    await discordMessage(
+      env,
+      `${icon} Validação **${safeText(run.name, 120)}** terminou: **${safeText(run.conclusion, 30)}**.\n${run.html_url}`,
+      [],
+      env.DISCORD_CHANNEL_BUILDS,
+    );
+  } else if (event === "release" && payload.action === "published") {
+    const message = `🚀 Nova versão **${safeText(payload.release.name || payload.release.tag_name, 120)}** publicada.\n${payload.release.html_url}`;
+    await Promise.all([
+      discordMessage(env, message, [], env.DISCORD_CHANNEL_RELEASES),
+      discordMessage(env, message, [], env.DISCORD_CHANNEL_UPDATES),
+    ]);
+  }
+  return json({ ok: true, delivery });
+}
 
-const toolDefinitions=[
- {name:'community_status',title:'Estado da comunidade',description:'Consulta o estado do repositório DinoPlay e da integração da comunidade.',inputSchema:{type:'object',properties:{},additionalProperties:false},annotations:{readOnlyHint:true,openWorldHint:false,destructiveHint:false}},
- {name:'list_contributions',title:'Listar contribuições',description:'Lista pull requests abertas no repositório DinoPlay.',inputSchema:{type:'object',properties:{limit:{type:'integer',minimum:1,maximum:30}},additionalProperties:false},annotations:{readOnlyHint:true,openWorldHint:false,destructiveHint:false}},
- {name:'inspect_contribution',title:'Inspecionar contribuição',description:'Obtém detalhes e ficheiros alterados numa pull request DinoPlay.',inputSchema:{type:'object',required:['number'],properties:{number:{type:'integer',minimum:1}},additionalProperties:false},annotations:{readOnlyHint:true,openWorldHint:false,destructiveHint:false}},
- {name:'draft_announcement',title:'Preparar anúncio',description:'Prepara e devolve um anúncio sem o publicar.',inputSchema:{type:'object',required:['title','message'],properties:{title:{type:'string',maxLength:120},message:{type:'string',maxLength:1500}},additionalProperties:false},annotations:{readOnlyHint:true,openWorldHint:false,destructiveHint:false}},
- {name:'publish_announcement',title:'Publicar anúncio',description:'Publica no canal oficial do Discord um anúncio já revisto. Requer confirm=true.',inputSchema:{type:'object',required:['title','message','confirm'],properties:{title:{type:'string',maxLength:120},message:{type:'string',maxLength:1500},confirm:{type:'boolean'}},additionalProperties:false},annotations:{readOnlyHint:false,openWorldHint:true,destructiveHint:false}},
- {name:'list_audit_log',title:'Consultar auditoria',description:'Lista ações recentes executadas pelas integrações DinoPlay.',inputSchema:{type:'object',properties:{limit:{type:'integer',minimum:1,maximum:50}},additionalProperties:false},annotations:{readOnlyHint:true,openWorldHint:false,destructiveHint:false}}
+const toolDefinitions = [
+  {
+    name: "community_status",
+    title: "Estado da comunidade",
+    description:
+      "Consulta o estado do repositório DinoPlay e da integração da comunidade.",
+    inputSchema: {
+      type: "object",
+      properties: {},
+      additionalProperties: false,
+    },
+    annotations: {
+      readOnlyHint: true,
+      openWorldHint: false,
+      destructiveHint: false,
+    },
+  },
+  {
+    name: "list_contributions",
+    title: "Listar contribuições",
+    description: "Lista pull requests abertas no repositório DinoPlay.",
+    inputSchema: {
+      type: "object",
+      properties: { limit: { type: "integer", minimum: 1, maximum: 30 } },
+      additionalProperties: false,
+    },
+    annotations: {
+      readOnlyHint: true,
+      openWorldHint: false,
+      destructiveHint: false,
+    },
+  },
+  {
+    name: "inspect_contribution",
+    title: "Inspecionar contribuição",
+    description:
+      "Obtém detalhes e ficheiros alterados numa pull request DinoPlay.",
+    inputSchema: {
+      type: "object",
+      required: ["number"],
+      properties: { number: { type: "integer", minimum: 1 } },
+      additionalProperties: false,
+    },
+    annotations: {
+      readOnlyHint: true,
+      openWorldHint: false,
+      destructiveHint: false,
+    },
+  },
+  {
+    name: "draft_announcement",
+    title: "Preparar anúncio",
+    description: "Prepara e devolve um anúncio sem o publicar.",
+    inputSchema: {
+      type: "object",
+      required: ["title", "message"],
+      properties: {
+        title: { type: "string", maxLength: 120 },
+        message: { type: "string", maxLength: 1500 },
+      },
+      additionalProperties: false,
+    },
+    annotations: {
+      readOnlyHint: true,
+      openWorldHint: false,
+      destructiveHint: false,
+    },
+  },
+  {
+    name: "publish_announcement",
+    title: "Publicar anúncio",
+    description:
+      "Publica no canal oficial do Discord um anúncio já revisto. Requer confirm=true.",
+    inputSchema: {
+      type: "object",
+      required: ["title", "message", "confirm"],
+      properties: {
+        title: { type: "string", maxLength: 120 },
+        message: { type: "string", maxLength: 1500 },
+        confirm: { type: "boolean" },
+      },
+      additionalProperties: false,
+    },
+    annotations: {
+      readOnlyHint: false,
+      openWorldHint: true,
+      destructiveHint: false,
+    },
+  },
+  {
+    name: "list_audit_log",
+    title: "Consultar auditoria",
+    description: "Lista ações recentes executadas pelas integrações DinoPlay.",
+    inputSchema: {
+      type: "object",
+      properties: { limit: { type: "integer", minimum: 1, maximum: 50 } },
+      additionalProperties: false,
+    },
+    annotations: {
+      readOnlyHint: true,
+      openWorldHint: false,
+      destructiveHint: false,
+    },
+  },
 ];
-function mcpResult(data,message='Concluído.'){return{content:[{type:'text',text:message}],structuredContent:data}}
-async function callTool(env,name,args){if(name==='community_status')return mcpResult(await repositoryStatus(env),'Estado da comunidade consultado.');if(name==='list_contributions'){const contributions=await listPulls(env,args.limit||10);return mcpResult({contributions},`${contributions.length} contribuições abertas.`)}if(name==='inspect_contribution'){const contribution=await inspectPull(env,args.number);return mcpResult({contribution},`Contribuição #${contribution.number} consultada.`)}if(name==='draft_announcement'){const draft={title:safeText(args.title,120),message:safeText(args.message,1500)};return mcpResult({draft},'Rascunho preparado; nada foi publicado.')}if(name==='publish_announcement'){if(args.confirm!==true)throw new Error('Confirmação explícita obrigatória');const title=safeText(args.title,120),message=safeText(args.message,1500),sent=await discordMessage(env,`📣 **${title}**\n${message}`,[],env.DISCORD_CHANNEL_ANNOUNCEMENTS);await audit(env,'discord.announcement.publish',{messageId:sent.id,title});return mcpResult({published:true,messageId:sent.id},'Anúncio publicado no Discord.')}if(name==='list_audit_log'){const entries=await listAudit(env,args.limit||20);return mcpResult({entries},`${entries.length} registos encontrados.`)}throw new Error('Ferramenta desconhecida')}
-async function handleMcp(request,env){const authorization=request.headers.get('authorization')||'';if(!env.MCP_BEARER_TOKEN||!await secureEqual(authorization,`Bearer ${env.MCP_BEARER_TOKEN}`))return json({error:'unauthorized'},401);let rpc;try{rpc=await request.json()}catch{return json({jsonrpc:'2.0',id:null,error:{code:-32700,message:'Parse error'}},400)}const{id=null,method,params={}}=rpc;if(method==='initialize')return json({jsonrpc:'2.0',id,result:{protocolVersion:'2025-06-18',capabilities:{tools:{listChanged:false}},serverInfo:{name:'dinoplay-community',version:'0.1.0'},instructions:'Use ferramentas de leitura livremente. Antes de publicar ou alterar sistemas externos, confirma a intenção do utilizador e envia confirm=true apenas após essa confirmação.'}});if(method==='notifications/initialized')return new Response(null,{status:202});if(method==='tools/list')return json({jsonrpc:'2.0',id,result:{tools:toolDefinitions}});if(method==='tools/call'){try{return json({jsonrpc:'2.0',id,result:await callTool(env,params.name,params.arguments||{})})}catch(error){return json({jsonrpc:'2.0',id,result:{isError:true,content:[{type:'text',text:safeText(error.message,300)}]}})}}return json({jsonrpc:'2.0',id,error:{code:-32601,message:'Method not found'}},404)}
+function mcpResult(data, message = "Concluído.") {
+  return {
+    content: [{ type: "text", text: message }],
+    structuredContent: data,
+  };
+}
+async function callTool(env, name, args) {
+  if (name === "community_status")
+    return mcpResult(
+      await repositoryStatus(env),
+      "Estado da comunidade consultado.",
+    );
+  if (name === "list_contributions") {
+    const contributions = await listPulls(env, args.limit || 10);
+    return mcpResult(
+      { contributions },
+      `${contributions.length} contribuições abertas.`,
+    );
+  }
+  if (name === "inspect_contribution") {
+    const contribution = await inspectPull(env, args.number);
+    return mcpResult(
+      { contribution },
+      `Contribuição #${contribution.number} consultada.`,
+    );
+  }
+  if (name === "draft_announcement") {
+    const draft = {
+      title: safeText(args.title, 120),
+      message: safeText(args.message, 1500),
+    };
+    return mcpResult({ draft }, "Rascunho preparado; nada foi publicado.");
+  }
+  if (name === "publish_announcement") {
+    if (args.confirm !== true)
+      throw new Error("Confirmação explícita obrigatória");
+    const title = safeText(args.title, 120),
+      message = safeText(args.message, 1500),
+      sent = await discordMessage(
+        env,
+        `📣 **${title}**\n${message}`,
+        [],
+        env.DISCORD_CHANNEL_ANNOUNCEMENTS,
+      );
+    await audit(env, "discord.announcement.publish", {
+      messageId: sent.id,
+      title,
+    });
+    return mcpResult(
+      { published: true, messageId: sent.id },
+      "Anúncio publicado no Discord.",
+    );
+  }
+  if (name === "list_audit_log") {
+    const entries = await listAudit(env, args.limit || 20);
+    return mcpResult({ entries }, `${entries.length} registos encontrados.`);
+  }
+  throw new Error("Ferramenta desconhecida");
+}
+async function handleMcp(request, env) {
+  const authorization = request.headers.get("authorization") || "";
+  if (
+    !env.MCP_BEARER_TOKEN ||
+    !(await secureEqual(authorization, `Bearer ${env.MCP_BEARER_TOKEN}`))
+  )
+    return json({ error: "unauthorized" }, 401);
+  let rpc;
+  try {
+    rpc = await request.json();
+  } catch {
+    return json(
+      {
+        jsonrpc: "2.0",
+        id: null,
+        error: { code: -32700, message: "Parse error" },
+      },
+      400,
+    );
+  }
+  const { id = null, method, params = {} } = rpc;
+  if (method === "initialize")
+    return json({
+      jsonrpc: "2.0",
+      id,
+      result: {
+        protocolVersion: "2025-06-18",
+        capabilities: { tools: { listChanged: false } },
+        serverInfo: { name: "dinoplay-community", version: "0.1.0" },
+        instructions:
+          "Use ferramentas de leitura livremente. Antes de publicar ou alterar sistemas externos, confirma a intenção do utilizador e envia confirm=true apenas após essa confirmação.",
+      },
+    });
+  if (method === "notifications/initialized")
+    return new Response(null, { status: 202 });
+  if (method === "tools/list")
+    return json({ jsonrpc: "2.0", id, result: { tools: toolDefinitions } });
+  if (method === "tools/call") {
+    try {
+      return json({
+        jsonrpc: "2.0",
+        id,
+        result: await callTool(env, params.name, params.arguments || {}),
+      });
+    } catch (error) {
+      return json({
+        jsonrpc: "2.0",
+        id,
+        result: {
+          isError: true,
+          content: [{ type: "text", text: safeText(error.message, 300) }],
+        },
+      });
+    }
+  }
+  return json(
+    {
+      jsonrpc: "2.0",
+      id,
+      error: { code: -32601, message: "Method not found" },
+    },
+    404,
+  );
+}
 
-export default{async fetch(request,env){const url=new URL(request.url);try{if(request.method==='GET'&&url.pathname==='/health')return json({ok:true,service:'DinoPlay Community Bot',discordConfigured:!!(env.DISCORD_PUBLIC_KEY&&env.DISCORD_BOT_TOKEN),githubConfigured:!!((env.GITHUB_APP_ID&&env.GITHUB_PRIVATE_KEY&&env.GITHUB_INSTALLATION_ID)||env.GITHUB_TOKEN),mcpConfigured:!!env.MCP_BEARER_TOKEN,auditConfigured:!!env.AUDIT});if(request.method==='POST'&&url.pathname==='/discord/interactions')return handleDiscord(request,env);if(request.method==='POST'&&url.pathname==='/github/webhook')return handleGithub(request,env);if(request.method==='POST'&&url.pathname==='/mcp')return handleMcp(request,env);return json({error:'not-found'},404)}catch(error){console.error(error);return json({error:'internal-error'},500)}}};
+export default {
+  async fetch(request, env) {
+    const url = new URL(request.url);
+    try {
+      if (request.method === "GET" && url.pathname === "/health")
+        return json({
+          ok: true,
+          service: "DinoPlay Community Bot",
+          discordConfigured: !!(
+            env.DISCORD_PUBLIC_KEY && env.DISCORD_BOT_TOKEN
+          ),
+          githubConfigured: !!(
+            (env.GITHUB_APP_ID &&
+              env.GITHUB_PRIVATE_KEY &&
+              env.GITHUB_INSTALLATION_ID) ||
+            env.GITHUB_TOKEN
+          ),
+          mcpConfigured: !!env.MCP_BEARER_TOKEN,
+          auditConfigured: !!env.AUDIT,
+        });
+      if (request.method === "POST" && url.pathname === "/discord/interactions")
+        return handleDiscord(request, env);
+      if (request.method === "POST" && url.pathname === "/github/webhook")
+        return handleGithub(request, env);
+      if (request.method === "POST" && url.pathname === "/mcp")
+        return handleMcp(request, env);
+      return json({ error: "not-found" }, 404);
+    } catch (error) {
+      console.error(error);
+      return json({ error: "internal-error" }, 500);
+    }
+  },
+};
 
-export const __test={safeText,verifyGithub,toolDefinitions};
+export const __test = { safeText, verifyGithub, toolDefinitions };
