@@ -23,3 +23,7 @@ mobile/android/upload_certificate.pem
 # Local tooling
 node_modules/
 *.log
+.dev.vars
+.env
+.env.*
+!.dev.vars.example

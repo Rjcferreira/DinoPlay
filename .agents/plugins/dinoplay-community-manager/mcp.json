@@ -1,0 +1,10 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json",
+  "mcpServers": {
+    "dinoplay_community": {
+      "type": "streamable-http",
+      "url": "https://dinoplay-community.dinoplay-multiplayer.workers.dev/mcp",
+      "auth": { "type": "api_key", "headerScheme": "bearer" }
+    }
+  }
+}

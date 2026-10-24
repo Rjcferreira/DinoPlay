@@ -1,0 +1,16 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "dinoplay-community",
+  "main": "src/index.js",
+  "compatibility_date": "2026-10-24",
+  "compatibility_flags": ["nodejs_compat"],
+  "vars": {
+    "GITHUB_REPOSITORY": "Rjcferreira/dino-color-quiz",
+    "COMMUNITY_NAME": "DinoPlay Community",
+    "ALLOWED_ORIGIN": "https://rjcferreira.github.io"
+  },
+  "kv_namespaces": [
+    { "binding": "AUDIT", "id": "dc2409ed239549248006a96ffebc93d5" }
+  ],
+  "observability": { "enabled": true }
+}

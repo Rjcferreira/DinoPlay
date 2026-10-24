@@ -1,0 +1,8 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "dinoplay-community-manager",
+  "version": "0.1.0",
+  "description": "Consulta e gere de forma controlada a comunidade DinoPlay no GitHub e Discord.",
+  "skills": "./skills/",
+  "mcpServers": "./mcp.json"
+}

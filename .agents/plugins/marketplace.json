@@ -1,0 +1,12 @@
+{
+  "plugins": [
+    {
+      "name": "dinoplay-community-manager",
+      "source": { "path": "./dinoplay-community-manager" },
+      "interface": {
+        "displayName": "DinoPlay Community Manager",
+        "shortDescription": "Gestão segura da comunidade DinoPlay"
+      }
+    }
+  ]
+}
