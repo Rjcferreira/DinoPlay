@@ -1593,6 +1593,7 @@
       right: [1, 0],
     };
     const move = () => adjustAim(...directions[button.dataset.aim]);
+    button.onclick = move;
     button.onpointerdown = (event) => {
       event.preventDefault();
       clearInterval(aimRepeat);
@@ -1608,6 +1609,45 @@
     button.onpointerleave = stop;
   });
   $("launchButton").onclick = launchFromControls;
+  // Some Android WebViews draw transformed controls correctly but keep their
+  // original hit areas. In rotated mode, resolve the visible button manually.
+  document.addEventListener(
+    "pointerup",
+    (event) => {
+      if (!document.body.classList.contains("rotate-game")) return;
+      const candidates = [...document.querySelectorAll("button")]
+        .filter((button) => {
+          const style = getComputedStyle(button);
+          if (
+            style.display === "none" ||
+            style.visibility === "hidden" ||
+            style.pointerEvents === "none" ||
+            button.disabled
+          )
+            return false;
+          const rect = button.getBoundingClientRect();
+          return (
+            rect.width > 0 &&
+            rect.height > 0 &&
+            event.clientX >= rect.left &&
+            event.clientX <= rect.right &&
+            event.clientY >= rect.top &&
+            event.clientY <= rect.bottom
+          );
+        })
+        .sort((a, b) => {
+          const ar = a.getBoundingClientRect(),
+            br = b.getBoundingClientRect();
+          return ar.width * ar.height - br.width * br.height;
+        });
+      const button = candidates[0];
+      if (!button) return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      button.click();
+    },
+    true,
+  );
   $("next").onclick = () => {
     levelIndex = Math.min(levels.length - 1, levelIndex + 1);
     prepareIntro();
