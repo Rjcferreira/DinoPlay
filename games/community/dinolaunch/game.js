@@ -1102,89 +1102,314 @@
     sky.addColorStop(1, scene.bottom);
     ctx.fillStyle = sky;
     ctx.fillRect(0, 0, W, H);
-    const sunX = 150 + ((levelIndex * 227) % 980),
-      sunY = 95 + ((levelIndex * 37) % 105);
-    ctx.fillStyle = scene.accent;
-    ctx.globalAlpha = 0.9;
-    ctx.beginPath();
-    ctx.arc(sunX, sunY, 46 + (levelIndex % 3) * 7, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.globalAlpha = 1;
-    ctx.fillStyle = "rgba(255,255,255,.72)";
-    for (let i = 0; i < 3; i++) {
-      const x = ((170 + i * 390 + levelIndex * 83) % 1380) - 50,
-        y = 95 + ((i * 47 + levelIndex * 23) % 145),
-        width = 55 + ((levelIndex + i) % 3) * 22;
-      ctx.beginPath();
-      ctx.ellipse(x, y, width, 20 + i * 3, 0, 0, Math.PI * 2);
-      ctx.fill();
-    }
-    ctx.fillStyle = scene.far;
-    ctx.beginPath();
-    ctx.moveTo(0, 520);
-    for (let x = 0; x <= W; x += 120)
-      ctx.lineTo(
-        x,
-        420 +
-          Math.sin(x * 0.009 + levelIndex * 0.8) * (45 + (levelIndex % 4) * 10),
-      );
-    ctx.lineTo(W, GROUND);
-    ctx.lineTo(0, GROUND);
-    ctx.fill();
-    if (["waterfall", "oasis", "frozen-lake"].includes(scene.kind)) {
-      ctx.fillStyle = scene.kind === "oasis" ? "#3cc5b5" : "#66d6ee";
-      ctx.beginPath();
-      ctx.ellipse(700, 585, 260, 44, -0.08, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = "rgba(255,255,255,.65)";
-      ctx.lineWidth = 5;
-      ctx.beginPath();
-      ctx.moveTo(500, 580);
-      ctx.quadraticCurveTo(700, 605, 900, 575);
-      ctx.stroke();
-    }
-    if (["jungle", "snow-pines"].includes(scene.kind)) {
-      for (let x = 310; x < 1180; x += 185) {
-        ctx.fillStyle = scene.kind === "snow-pines" ? "#285f63" : "#176b45";
+    const circle = (x, y, r, color) => {
+        ctx.fillStyle = color;
         ctx.beginPath();
-        ctx.moveTo(x, 565);
-        ctx.lineTo(x + 48, 455 - (x % 3) * 12);
-        ctx.lineTo(x + 96, 565);
+        ctx.arc(x, y, r, 0, Math.PI * 2);
         ctx.fill();
-        if (scene.kind === "snow-pines") {
-          ctx.strokeStyle = "#e8fbff";
-          ctx.lineWidth = 7;
+      },
+      mountain = (x, y, w, h, color, snow = false) => {
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(x + w / 2, y - h);
+        ctx.lineTo(x + w, y);
+        ctx.closePath();
+        ctx.fill();
+        if (snow) {
+          ctx.fillStyle = "rgba(255,255,255,.86)";
           ctx.beginPath();
-          ctx.moveTo(x + 28, 510);
-          ctx.lineTo(x + 48, 465);
-          ctx.lineTo(x + 70, 510);
+          ctx.moveTo(x + w * 0.31, y - h * 0.62);
+          ctx.lineTo(x + w / 2, y - h);
+          ctx.lineTo(x + w * 0.69, y - h * 0.62);
+          ctx.lineTo(x + w * 0.57, y - h * 0.7);
+          ctx.lineTo(x + w * 0.49, y - h * 0.61);
+          ctx.lineTo(x + w * 0.42, y - h * 0.69);
+          ctx.closePath();
+          ctx.fill();
+        }
+      },
+      pine = (x, base, height, color, snowy = false) => {
+        ctx.fillStyle = color;
+        for (let i = 0; i < 3; i++) {
+          const y = base - height + i * height * 0.23,
+            half = height * (0.23 + i * 0.065);
+          ctx.beginPath();
+          ctx.moveTo(x, y);
+          ctx.lineTo(x - half, y + height * 0.46);
+          ctx.lineTo(x + half, y + height * 0.46);
+          ctx.closePath();
+          ctx.fill();
+          if (snowy) {
+            ctx.strokeStyle = "rgba(255,255,255,.9)";
+            ctx.lineWidth = 5;
+            ctx.beginPath();
+            ctx.moveTo(x - half * 0.72, y + height * 0.36);
+            ctx.lineTo(x, y);
+            ctx.lineTo(x + half * 0.72, y + height * 0.36);
+            ctx.stroke();
+          }
+        }
+      },
+      palm = (x, base, height) => {
+        ctx.strokeStyle = "#70452c";
+        ctx.lineWidth = 14;
+        ctx.beginPath();
+        ctx.moveTo(x, base);
+        ctx.quadraticCurveTo(
+          x - 12,
+          base - height * 0.55,
+          x + 8,
+          base - height,
+        );
+        ctx.stroke();
+        ctx.strokeStyle = "#197b4d";
+        ctx.lineWidth = 12;
+        for (let a = -2.7; a < 0.1; a += 0.55) {
+          ctx.beginPath();
+          ctx.moveTo(x + 8, base - height);
+          ctx.quadraticCurveTo(
+            x + Math.cos(a) * 40,
+            base - height + Math.sin(a) * 25,
+            x + Math.cos(a) * 76,
+            base - height + Math.sin(a) * 60,
+          );
           ctx.stroke();
         }
-      }
-    }
-    if (["ruins", "canyon", "ice-volcano"].includes(scene.kind)) {
-      ctx.fillStyle = scene.kind === "ice-volcano" ? "#596273" : "#99583d";
-      for (let x = 350; x < 1200; x += 270) {
+      };
+
+    // Every level has its own recognizable world silhouette and landmarks.
+    switch (scene.kind) {
+      case "meadow":
+        circle(190, 110, 55, "#ffe266");
+        for (let x = 40; x < W; x += 150) {
+          circle(x, 465 + (x % 3) * 14, 54, "#45a954");
+          ctx.fillStyle = "#86552d";
+          ctx.fillRect(x - 8, 480, 16, 92);
+        }
+        ctx.fillStyle = "#ffffff";
+        for (let x = 110; x < W; x += 235) circle(x, 545, 6, "#fff6d0");
+        break;
+      case "sunrise":
+        circle(690, 410, 115, "#ffcf69");
+        mountain(-80, 565, 520, 275, "#555996");
+        mountain(270, 565, 620, 340, "#6c69a0");
+        mountain(760, 565, 580, 250, "#4d5e8a");
+        ctx.strokeStyle = "rgba(255,234,174,.7)";
+        ctx.lineWidth = 7;
+        for (let i = 0; i < 5; i++) {
+          ctx.beginPath();
+          ctx.moveTo(540 - i * 28, 410);
+          ctx.lineTo(840 + i * 28, 410);
+          ctx.stroke();
+        }
+        break;
+      case "waterfall":
+        mountain(-50, 570, 500, 330, "#126f66");
+        mountain(350, 570, 600, 410, "#167c70");
+        mountain(840, 570, 500, 315, "#0f655e");
+        ctx.fillStyle = "#8ce9f4";
+        ctx.fillRect(610, 238, 105, 350);
+        ctx.fillStyle = "rgba(255,255,255,.7)";
+        ctx.fillRect(628, 250, 17, 320);
+        ctx.fillRect(675, 245, 10, 330);
+        circle(665, 575, 145, "rgba(75,202,220,.82)");
+        break;
+      case "jungle":
+        ctx.strokeStyle = "#145d3d";
+        ctx.lineWidth = 18;
         ctx.beginPath();
-        ctx.moveTo(x, 560);
-        ctx.lineTo(x + 65, 390 + (x % 5) * 12);
-        ctx.lineTo(x + 140, 560);
+        ctx.moveTo(0, 80);
+        ctx.bezierCurveTo(320, 260, 470, 40, 720, 180);
+        ctx.bezierCurveTo(930, 300, 1080, 80, W, 150);
+        ctx.stroke();
+        for (let x = 20; x < W; x += 95) {
+          circle(x, 420 + (x % 4) * 25, 70, x % 2 ? "#19794b" : "#249b55");
+          circle(x + 35, 455, 48, "#146c43");
+        }
+        for (let x = 150; x < W; x += 270) palm(x, 580, 190);
+        break;
+      case "sunset":
+        circle(1000, 250, 92, "#ffcf70");
+        mountain(-70, 570, 560, 240, "#68526c");
+        mountain(370, 570, 610, 305, "#725569");
+        mountain(860, 570, 500, 215, "#5a506c");
+        ctx.fillStyle = "rgba(255,198,119,.52)";
+        for (let i = 0; i < 5; i++)
+          ctx.fillRect(835 + i * 22, 355 + i * 18, 330 - i * 44, 8);
+        break;
+      case "dunes":
+        circle(200, 105, 62, "#fff0a0");
+        ctx.fillStyle = "#efc96c";
+        ctx.beginPath();
+        ctx.moveTo(0, 470);
+        ctx.quadraticCurveTo(250, 310, 570, 490);
+        ctx.quadraticCurveTo(900, 280, W, 480);
+        ctx.lineTo(W, GROUND);
+        ctx.lineTo(0, GROUND);
         ctx.fill();
-      }
-    }
-    if (scene.kind === "aurora") {
-      ctx.strokeStyle = "rgba(111,255,216,.55)";
-      ctx.lineWidth = 28;
-      ctx.beginPath();
-      ctx.moveTo(150, 110);
-      ctx.bezierCurveTo(380, 10, 570, 260, 820, 80);
-      ctx.bezierCurveTo(980, 0, 1080, 100, 1220, 40);
-      ctx.stroke();
-    }
-    if (scene.kind === "desert-night") {
-      ctx.fillStyle = "#fff8cf";
-      for (let i = 0; i < 32; i++)
-        ctx.fillRect((i * 173) % W, 45 + ((i * 67) % 280), 3, 3);
+        ctx.fillStyle = "#c98d47";
+        for (const x of [360, 990]) {
+          ctx.fillRect(x, 430, 18, 125);
+          ctx.fillRect(x - 28, 458, 30, 15);
+          ctx.fillRect(x + 15, 475, 32, 15);
+        }
+        break;
+      case "oasis":
+        ctx.fillStyle = "#d7b35c";
+        ctx.beginPath();
+        ctx.moveTo(0, 480);
+        ctx.quadraticCurveTo(360, 330, 720, 500);
+        ctx.quadraticCurveTo(1040, 380, W, 500);
+        ctx.lineTo(W, GROUND);
+        ctx.lineTo(0, GROUND);
+        ctx.fill();
+        ctx.fillStyle = "#29bfc1";
+        ctx.beginPath();
+        ctx.ellipse(700, 535, 260, 55, -0.05, 0, Math.PI * 2);
+        ctx.fill();
+        palm(420, 545, 230);
+        palm(995, 550, 205);
+        break;
+      case "canyon":
+        circle(1080, 100, 53, "#ffd073");
+        ctx.fillStyle = "#8e4539";
+        ctx.fillRect(0, 320, 235, 270);
+        ctx.fillRect(1080, 270, 260, 320);
+        ctx.fillStyle = "#b65d43";
+        ctx.fillRect(80, 255, 120, 80);
+        ctx.fillRect(1130, 205, 115, 80);
+        mountain(220, 580, 370, 180, "#9d4b3c");
+        mountain(710, 580, 380, 235, "#7f4039");
+        break;
+      case "ruins":
+        mountain(-50, 570, 500, 220, "#9c7c5e");
+        mountain(720, 570, 620, 260, "#8f7157");
+        ctx.fillStyle = "#b99a70";
+        for (const x of [160, 360, 830, 1030]) {
+          ctx.fillRect(x, 325, 42, 235);
+          ctx.fillRect(x - 16, 315, 74, 22);
+        }
+        ctx.fillRect(150, 300, 250, 24);
+        ctx.strokeStyle = "#806648";
+        ctx.lineWidth = 5;
+        ctx.beginPath();
+        ctx.arc(700, 505, 95, Math.PI, 0);
+        ctx.stroke();
+        break;
+      case "desert-night":
+        circle(1080, 120, 62, "#fff3ba");
+        circle(1105, 100, 62, scene.top);
+        ctx.fillStyle = "#fff8cf";
+        for (let i = 0; i < 45; i++)
+          circle(
+            (i * 173) % W,
+            35 + ((i * 67) % 310),
+            i % 7 === 0 ? 3 : 1.5,
+            "#fff8cf",
+          );
+        ctx.fillStyle = "#4d385b";
+        ctx.beginPath();
+        ctx.moveTo(0, 510);
+        ctx.quadraticCurveTo(310, 365, 650, 520);
+        ctx.quadraticCurveTo(970, 380, W, 505);
+        ctx.lineTo(W, GROUND);
+        ctx.lineTo(0, GROUND);
+        ctx.fill();
+        break;
+      case "glacier":
+        mountain(-100, 570, 530, 380, "#6db3d0", true);
+        mountain(280, 570, 600, 470, "#78bfd8", true);
+        mountain(760, 570, 630, 410, "#5ca6c6", true);
+        ctx.fillStyle = "rgba(194,246,255,.82)";
+        for (const x of [160, 560, 1080]) {
+          ctx.beginPath();
+          ctx.moveTo(x, 565);
+          ctx.lineTo(x + 50, 400);
+          ctx.lineTo(x + 105, 565);
+          ctx.fill();
+        }
+        break;
+      case "aurora":
+        ctx.fillStyle = "#eefcff";
+        for (let i = 0; i < 38; i++)
+          circle((i * 151) % W, 30 + ((i * 83) % 280), 1.7, "#eefcff");
+        for (const [color, width, offset] of [
+          ["rgba(82,255,191,.55)", 42, 0],
+          ["rgba(93,170,255,.44)", 30, 45],
+          ["rgba(205,103,255,.32)", 22, 82],
+        ]) {
+          ctx.strokeStyle = color;
+          ctx.lineWidth = width;
+          ctx.beginPath();
+          ctx.moveTo(40, 120 + offset);
+          ctx.bezierCurveTo(
+            320,
+            -20 + offset,
+            530,
+            270 + offset,
+            790,
+            80 + offset,
+          );
+          ctx.bezierCurveTo(
+            980,
+            -30 + offset,
+            1140,
+            150 + offset,
+            W,
+            45 + offset,
+          );
+          ctx.stroke();
+        }
+        mountain(-50, 575, 610, 250, "#274c6b", true);
+        mountain(690, 575, 700, 285, "#294f6b", true);
+        break;
+      case "frozen-lake":
+        mountain(-80, 500, 530, 285, "#83bfd5", true);
+        mountain(750, 505, 640, 320, "#75b1ca", true);
+        ctx.fillStyle = "#9ee4f5";
+        ctx.fillRect(0, 465, W, 125);
+        ctx.strokeStyle = "rgba(255,255,255,.78)";
+        ctx.lineWidth = 4;
+        for (let x = 80; x < W; x += 210) {
+          ctx.beginPath();
+          ctx.moveTo(x, 520);
+          ctx.lineTo(x + 75, 495);
+          ctx.lineTo(x + 145, 540);
+          ctx.stroke();
+        }
+        break;
+      case "snow-pines":
+        mountain(-100, 560, 650, 330, "#6092ad", true);
+        mountain(620, 560, 760, 390, "#527e99", true);
+        for (let x = 50; x < W; x += 125)
+          pine(x, 575, 170 + (x % 3) * 20, "#285f63", true);
+        break;
+      case "ice-volcano":
+        mountain(280, 570, 760, 500, "#4d5368", true);
+        ctx.fillStyle = "#ff7959";
+        ctx.beginPath();
+        ctx.moveTo(615, 165);
+        ctx.quadraticCurveTo(660, 230, 700, 315);
+        ctx.quadraticCurveTo(735, 235, 760, 165);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = "rgba(255,183,89,.65)";
+        for (const [x, y, r] of [
+          [625, 130, 12],
+          [700, 95, 18],
+          [755, 130, 10],
+        ])
+          circle(x, y, r, "rgba(255,183,89,.72)");
+        ctx.fillStyle = "rgba(55,48,65,.55)";
+        for (let i = 0; i < 4; i++)
+          circle(
+            640 + i * 45,
+            70 - (i % 2) * 25,
+            32 + i * 4,
+            "rgba(55,48,65,.45)",
+          );
+        break;
     }
     ctx.fillStyle = scene.ground;
     ctx.fillRect(0, GROUND, W, H - GROUND);
