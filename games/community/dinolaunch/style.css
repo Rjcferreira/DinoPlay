@@ -354,6 +354,65 @@ body.rotate-game #app {
   transform: rotate(90deg) translateY(-100%);
   transform-origin: top left;
 }
+.launch-controls {
+  display: none;
+}
+@media (pointer: coarse) {
+  body.playing .launch-controls {
+    position: absolute;
+    z-index: 7;
+    left: 50%;
+    bottom: max(14px, env(safe-area-inset-bottom));
+    display: flex;
+    align-items: flex-end;
+    gap: 12px;
+    transform: translateX(-50%);
+  }
+  .aim-pad {
+    display: grid;
+    grid-template-columns: repeat(3, 48px);
+    grid-template-rows: repeat(2, 48px);
+    gap: 5px;
+  }
+  .aim-pad button,
+  .launch-button {
+    border: 2px solid rgba(255, 255, 255, 0.78);
+    color: #fff;
+    background: rgba(8, 44, 76, 0.88);
+    font-weight: 900;
+    box-shadow: 0 5px 0 rgba(4, 23, 41, 0.35);
+    touch-action: manipulation;
+  }
+  .aim-pad button {
+    border-radius: 15px;
+    font-size: 22px;
+  }
+  .aim-pad [data-aim="up"] {
+    grid-column: 2;
+  }
+  .aim-pad [data-aim="left"] {
+    grid-column: 1;
+  }
+  .aim-pad [data-aim="right"] {
+    grid-column: 3;
+  }
+  .aim-pad [data-aim="down"] {
+    grid-column: 2;
+    grid-row: 2;
+  }
+  .launch-button {
+    min-width: 112px;
+    min-height: 54px;
+    border-radius: 18px;
+    padding: 8px 14px;
+    font-size: 15px;
+  }
+  .aim-pad button:active,
+  .launch-button:active {
+    transform: translateY(4px);
+    box-shadow: none;
+  }
+}
 @media (max-width: 600px) {
   .hud {
     top: max(7px, env(safe-area-inset-top));

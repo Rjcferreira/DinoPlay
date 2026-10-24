@@ -39,6 +39,7 @@
       ability: "Toca no ecrã durante o voo para usar o poder!",
       locked: "Completa o nível anterior",
       lost: "Tenta outra vez!",
+      launch: "LANÇAR",
       worlds: ["Vale Verde", "Deserto Dourado", "Montanha Gelada"],
       powers: {
         dash: "Toque: Super impulso",
@@ -65,6 +66,7 @@
       ability: "Toque na tela durante o voo para usar o poder!",
       locked: "Complete a fase anterior",
       lost: "Tente novamente!",
+      launch: "LANÇAR",
       worlds: ["Vale Verde", "Deserto Dourado", "Montanha Gelada"],
       powers: {
         dash: "Toque: Super impulso",
@@ -91,6 +93,7 @@
       ability: "Tap the screen in flight to use the power!",
       locked: "Complete the previous level",
       lost: "Try again!",
+      launch: "LAUNCH",
       worlds: ["Green Valley", "Golden Desert", "Frozen Mountain"],
       powers: {
         dash: "Tap: Super dash",
@@ -117,6 +120,7 @@
       ability: "Touche l’écran en vol pour utiliser le pouvoir !",
       locked: "Termine le niveau précédent",
       lost: "Réessaie !",
+      launch: "LANCER",
       worlds: ["Vallée Verte", "Désert Doré", "Montagne Gelée"],
       powers: {
         dash: "Toucher : Super élan",
@@ -143,6 +147,7 @@
       ability: "Tippe im Flug für die Spezialkraft!",
       locked: "Schließe das vorige Level ab",
       lost: "Versuch es noch einmal!",
+      launch: "START",
       worlds: ["Grünes Tal", "Goldene Wüste", "Eisberg"],
       powers: {
         dash: "Tippen: Superschub",
@@ -169,6 +174,7 @@
       ability: "¡Toca la pantalla durante el vuelo para usar el poder!",
       locked: "Completa el nivel anterior",
       lost: "¡Inténtalo otra vez!",
+      launch: "LANZAR",
       worlds: ["Valle Verde", "Desierto Dorado", "Montaña Helada"],
       powers: {
         dash: "Toque: Superimpulso",
@@ -195,6 +201,7 @@
       ability: "Dotknij ekranu w locie, aby użyć mocy!",
       locked: "Ukończ poprzedni poziom",
       lost: "Spróbuj ponownie!",
+      launch: "WYSTRZEL",
       worlds: ["Zielona Dolina", "Złota Pustynia", "Lodowa Góra"],
       powers: {
         dash: "Dotknij: Super pęd",
@@ -528,6 +535,7 @@
     $("next").textContent = text.next;
     $("retry").textContent = text.retry;
     $("resultLevels").textContent = text.levels;
+    $("launchButton").textContent = `🚀 ${text.launch}`;
   }
   function buildLevelGrid() {
     const grid = $("levelGrid");
@@ -603,6 +611,7 @@
     ui.level.textContent = levelIndex + 1;
     ui.world.textContent = text.worlds[l.world];
     running = true;
+    document.body.classList.add("playing");
     show(null);
     textHint();
     tone(420, 0.08);
@@ -745,6 +754,33 @@
     ui.score.textContent = score;
     tone(260, 0.1, "triangle", 0.07);
     setTimeout(textHint, 350);
+  }
+  function adjustAim(dx, dy) {
+    if (!running || !current || current.launched) return;
+    let pullX = SLING.x - current.x,
+      pullY = SLING.y - current.y;
+    if (Math.hypot(pullX, pullY) < 20) {
+      pullX = 110;
+      pullY = -65;
+    }
+    pullX += dx * 18;
+    pullY += dy * 18;
+    const length = Math.hypot(pullX, pullY) || 1,
+      scale = Math.min(1, 185 / length);
+    current.x = SLING.x - pullX * scale;
+    current.y = SLING.y - pullY * scale;
+    dragging = true;
+  }
+  function launchFromControls() {
+    if (!running || !current) return;
+    if (current.launched) {
+      useAbility();
+      return;
+    }
+    if (Math.hypot(SLING.x - current.x, SLING.y - current.y) < 20)
+      adjustAim(0, 0);
+    dragging = false;
+    launch();
   }
   canvas.addEventListener("pointerdown", (e) => {
     e.preventDefault();
@@ -1539,6 +1575,7 @@
   };
   $("back").onclick = () => {
     running = false;
+    document.body.classList.remove("playing");
     show("home");
   };
   $("sound").onclick = () => {
@@ -1547,6 +1584,30 @@
     tone(440);
   };
   $("rotateScreen").onclick = rotateGame;
+  let aimRepeat = null;
+  document.querySelectorAll("[data-aim]").forEach((button) => {
+    const directions = {
+      up: [0, -1],
+      down: [0, 1],
+      left: [-1, 0],
+      right: [1, 0],
+    };
+    const move = () => adjustAim(...directions[button.dataset.aim]);
+    button.onpointerdown = (event) => {
+      event.preventDefault();
+      clearInterval(aimRepeat);
+      move();
+      aimRepeat = setInterval(move, 85);
+    };
+    const stop = () => {
+      clearInterval(aimRepeat);
+      aimRepeat = null;
+    };
+    button.onpointerup = stop;
+    button.onpointercancel = stop;
+    button.onpointerleave = stop;
+  });
+  $("launchButton").onclick = launchFromControls;
   $("next").onclick = () => {
     levelIndex = Math.min(levels.length - 1, levelIndex + 1);
     prepareIntro();
