@@ -4,7 +4,7 @@
     H = 720,
     GROUND = 622,
     SLING = { x: 175, y: 500 },
-    GRAVITY = 780;
+    GRAVITY = 520;
   const canvas = document.querySelector("#game"),
     ctx = canvas.getContext("2d");
   const $ = (id) => document.getElementById(id);
@@ -483,6 +483,7 @@
       ability: false,
       rest: 0,
       alive: true,
+      trail: [],
     };
     projectiles.push(current);
   }
@@ -558,6 +559,7 @@
           vy: current.vy + k * 160,
           x: current.x,
           y: current.y + k * 8,
+          trail: [],
         };
         projectiles.push(p);
       }
@@ -575,9 +577,11 @@
       current.y = SLING.y;
       return;
     }
-    const d = dinos.find((x) => x.id === current.dino);
-    current.vx = dx * 5.3 * d.power;
-    current.vy = dy * 5.3 * d.power;
+    const d = dinos.find((x) => x.id === current.dino),
+      pull = Math.min(1, dist / 185),
+      speed = (720 + pull * 520) * d.power;
+    current.vx = (dx / dist) * speed;
+    current.vy = (dy / dist) * speed - 115 * pull;
     current.launched = true;
     shots++;
     score = Math.max(0, score - 50);
@@ -603,7 +607,7 @@
       dx = p.x - SLING.x,
       dy = p.y - SLING.y,
       dist = Math.hypot(dx, dy),
-      max = 145,
+      max = 185,
       s = Math.min(1, max / (dist || 1));
     current.x = SLING.x + dx * s;
     current.y = SLING.y + dy * s;
@@ -625,8 +629,12 @@
       p.vx += wind * dt;
       p.x += p.vx * dt;
       p.y += p.vy * dt;
-      p.vx *= 0.998;
-      p.vy *= 0.998;
+      p.vx *= 0.9995;
+      p.vy *= 0.9995;
+      p.trail ||= [];
+      p.trail.push({ x: p.x, y: p.y, life: 1 });
+      if (p.trail.length > 28) p.trail.shift();
+      for (const point of p.trail) point.life -= dt * 1.7;
       if (p.y + p.r > GROUND) {
         p.y = GROUND - p.r;
         p.vy *= -0.34;
@@ -931,14 +939,20 @@
       ctx.stroke();
       if (dragging) {
         const dx = SLING.x - current.x,
-          dy = SLING.y - current.y;
+          dy = SLING.y - current.y,
+          dist = Math.hypot(dx, dy) || 1,
+          dino = dinos.find((item) => item.id === current.dino),
+          pull = Math.min(1, dist / 185),
+          speed = (720 + pull * 520) * dino.power,
+          vx = (dx / dist) * speed,
+          vy = (dy / dist) * speed - 115 * pull;
         ctx.fillStyle = "rgba(255,255,255,.7)";
-        for (let i = 1; i < 8; i++) {
-          const t = i * 0.1,
-            x = current.x + dx * t * 2.1,
-            y = current.y + dy * t * 2.1 + GRAVITY * (t * 0.25) ** 2;
+        for (let i = 1; i < 11; i++) {
+          const t = i * 0.115,
+            x = current.x + vx * t,
+            y = current.y + vy * t + 0.5 * GRAVITY * t * t;
           ctx.beginPath();
-          ctx.arc(x, y, 5 - i * 0.3, 0, Math.PI * 2);
+          ctx.arc(x, y, Math.max(2, 5 - i * 0.25), 0, Math.PI * 2);
           ctx.fill();
         }
       }
@@ -960,7 +974,28 @@
       if (o.type === "block") drawBlock(o);
       else drawBot(o);
     }
-    for (const p of projectiles) if (p.alive) drawDino(p);
+    for (const p of projectiles) {
+      if (!p.alive) continue;
+      if (p.trail?.length) {
+        for (let i = 0; i < p.trail.length; i++) {
+          const point = p.trail[i];
+          ctx.globalAlpha =
+            Math.max(0, point.life) * (i / p.trail.length) * 0.42;
+          ctx.fillStyle = p.color;
+          ctx.beginPath();
+          ctx.arc(
+            point.x,
+            point.y,
+            3 + (i / p.trail.length) * 5,
+            0,
+            Math.PI * 2,
+          );
+          ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+      }
+      drawDino(p);
+    }
     for (const p of particles) {
       ctx.globalAlpha = Math.max(0, p.life);
       ctx.fillStyle = p.color;
