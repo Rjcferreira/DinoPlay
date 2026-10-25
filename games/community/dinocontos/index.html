@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: blob:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:">
+  <title>DinoContos</title><link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main id="app">
+  <section id="home" class="screen open home">
+    <div class="hero"><div class="hero-shade"></div><div class="hero-copy"><span>DINOCONTOS</span><h1>Histórias que ganham vida</h1><p>Escolhe uma aventura, aconchega-te e deixa-nos contar.</p><button id="discover" class="primary">DESCOBRIR HISTÓRIAS</button></div></div>
+    <div class="library"><div class="section-title"><div><small>A MINHA ESTANTE</small><h2>Escolhe uma história</h2></div><b id="completedCount">0/5 concluídas</b></div><div id="storyGrid" class="story-grid"></div></div>
+  </section>
+
+  <section id="detail" class="screen detail"><div id="detailArt" class="detail-art"><button id="detailBack" class="round">‹</button><button id="favourite" class="round favourite">♡</button><div class="detail-gradient"></div><div class="detail-copy"><span id="detailTheme"></span><h2 id="detailTitle"></h2><p id="detailSummary"></p><div class="badges"><b>🎧 Narrada</b><b id="detailTime">6 min</b><b>🌙 4+</b></div><button id="listen" class="primary">▶ OUVIR HISTÓRIA</button><button id="readOnly" class="secondary">LER SEM NARRAÇÃO</button></div></div></section>
+
+  <section id="reader" class="screen reader">
+    <div id="scene" class="scene"><div class="scene-filter"></div><header><button id="readerBack" class="round">×</button><span id="pageTitle"></span><button id="readerSound" class="round">🔊</button></header><div class="page-dots" id="pageDots"></div><button id="previous" class="page-arrow left">‹</button><button id="next" class="page-arrow right">›</button></div>
+    <div class="narration"><div class="narrator"><span id="voicePulse">🎙️</span><div><small id="narratorState">A CONTAR...</small><b>Avó Dina</b></div></div><p id="pageText"></p><div class="controls"><button id="repeat">↻<small>REPETIR</small></button><button id="playPause" class="main-control">⏸</button><button id="speed">1×<small>VELOCIDADE</small></button></div></div>
+  </section>
+
+  <section id="quiz" class="screen quiz"><div class="quiz-card"><span class="quiz-dino">🦖✨</span><small>ANTES DE TERMINAR...</small><h2 id="quizQuestion"></h2><div id="quizAnswers"></div><p id="quizFeedback"></p></div></section>
+  <section id="finish" class="screen finish"><div class="finish-card"><span>📖⭐</span><h2>Fim da história!</h2><p id="finishMessage"></p><button id="another" class="primary">ESCOLHER OUTRA HISTÓRIA</button><button id="again" class="secondary">OUVIR NOVAMENTE</button></div></section>
+</main>
+<script src="../../../sdk/dinoplay-game-sdk.js"></script><script src="game.js"></script>
+</body></html>
