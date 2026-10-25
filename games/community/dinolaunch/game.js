@@ -1595,6 +1595,7 @@
     const move = () => adjustAim(...directions[button.dataset.aim]);
     button.onclick = move;
     button.onpointerdown = (event) => {
+      if (document.body.classList.contains("rotate-game")) return;
       event.preventDefault();
       clearInterval(aimRepeat);
       move();
@@ -1610,11 +1611,17 @@
   });
   $("launchButton").onclick = launchFromControls;
   // Some Android WebViews draw transformed controls correctly but keep their
-  // original hit areas. In rotated mode, resolve the visible button manually.
+  // original hit areas. Convert the touch to the unrotated layout, measure the
+  // real controls there and execute exactly the button shown under the finger.
   document.addEventListener(
     "pointerup",
     (event) => {
       if (!document.body.classList.contains("rotate-game")) return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      const localX = event.clientY,
+        localY = innerWidth - event.clientX;
+      document.body.classList.remove("rotate-game");
       const candidates = [...document.querySelectorAll("button")]
         .filter((button) => {
           const style = getComputedStyle(button);
@@ -1629,10 +1636,10 @@
           return (
             rect.width > 0 &&
             rect.height > 0 &&
-            event.clientX >= rect.left &&
-            event.clientX <= rect.right &&
-            event.clientY >= rect.top &&
-            event.clientY <= rect.bottom
+            localX >= rect.left &&
+            localX <= rect.right &&
+            localY >= rect.top &&
+            localY <= rect.bottom
           );
         })
         .sort((a, b) => {
@@ -1641,10 +1648,8 @@
           return ar.width * ar.height - br.width * br.height;
         });
       const button = candidates[0];
-      if (!button) return;
-      event.preventDefault();
-      event.stopImmediatePropagation();
-      button.click();
+      document.body.classList.add("rotate-game");
+      if (button) button.click();
     },
     true,
   );
