@@ -110,7 +110,7 @@
   document.querySelector("#updateStatus").textContent =
     `DinoPlay v${window.DINOPLAY_VERSION || "—"}`;
   host.classList.add("platform-home");
-  host.innerHTML = `<div class="dp-head"><div><small>OLÁ, EXPLORADOR!</small><h1>Dino<span>Play</span></h1><p>A tua biblioteca de aventuras</p></div><img class="dp-mascot" src="assets/dinoplay-mascot.png" alt="Dinossauro DinoPlay"></div><div id="dpView"></div><span id="puzzleMenuProgress" hidden></span><span id="blockMenuProgress" hidden></span><nav class="dp-nav"><button data-tab="home" class="active">🏠<small>Início</small></button><button data-tab="library">🎮<small>Biblioteca</small></button><button data-tab="parents">👨‍👩‍👧<small>Pais</small></button></nav>`;
+  host.innerHTML = `<div class="dp-head"><div><small>OLÁ, EXPLORADOR!</small><h1>Dino<span>Play</span></h1><p>As tuas aventuras num só lugar</p></div><img class="dp-mascot" src="assets/dinoplay-mascot.png" alt="Dinossauro DinoPlay"></div><div id="dpView"></div><span id="puzzleMenuProgress" hidden></span><span id="blockMenuProgress" hidden></span><nav class="dp-nav"><button data-tab="home" class="active">🏠<small>Início</small></button><button data-tab="library">🎮<small>Biblioteca</small></button><button data-tab="parents">👨‍👩‍👧<small>Pais</small></button></nav>`;
   let tab = "home",
     category = "all",
     parentPage = "security",
@@ -122,7 +122,8 @@
     friendSyncTimer = null,
     friendSyncBusy = false,
     catalogRefreshBusy = false,
-    parentRecoveryCode = "";
+    parentRecoveryCode = "",
+    librarySearch = "";
   const installed = (id) => platform.installed.includes(id),
     savePlatform = () => {
       let latest = {};
@@ -250,7 +251,7 @@
     const g = catalog[id],
       has = installed(id),
       installing = busy === id;
-    return `<article class="dp-game ${safeText(g.tone)}"><div class="dp-cover"><img src="${safeText(g.cover)}" alt=""><b>${safeText(tr(g.name))}</b></div><div class="dp-game-info"><div><i>${safeText(g.age)}</i><i>⬇ ${safeText(g.size)}</i><i>✓ ${safeText(tr("Offline"))}</i></div><p>${safeText(tr(g.description))}</p><div class="dp-game-actions"><button data-${has ? "play" : "install"}="${safeText(id)}" ${installing ? "disabled" : ""}>${safeText(tr(installing ? "A INSTALAR…" : has ? "JOGAR" : "INSTALAR"))}</button><button class="details" data-details="${safeText(id)}" aria-label="${safeText(tr("Informações"))}: ${safeText(tr(g.name))}">ⓘ</button></div><div class="dp-install-bar ${installing ? "" : "hidden"}"><span id="install-${safeText(id)}"></span></div></div></article>`;
+    return `<article class="dp-game ${safeText(g.tone)}" data-game-id="${safeText(id)}"><div class="dp-cover"><img src="${safeText(g.cover)}" alt=""><b>${safeText(tr(g.name))}</b></div><div class="dp-game-info"><div><i>${safeText(g.age)}</i><i>⬇ ${safeText(g.size)}</i><i>✓ ${safeText(tr("Offline"))}</i></div><p>${safeText(tr(g.description))}</p><div class="dp-game-actions"><button data-${has ? "play" : "install"}="${safeText(id)}" ${installing ? "disabled" : ""}>${safeText(tr(installing ? "A INSTALAR…" : has ? "JOGAR" : "INSTALAR"))}</button><button class="details" data-details="${safeText(id)}" aria-label="${safeText(tr("Informações"))}: ${safeText(tr(g.name))}">ⓘ</button></div><div class="dp-install-bar ${installing ? "" : "hidden"}"><span id="install-${safeText(id)}"></span></div></div></article>`;
   }
   function categoryButtons() {
     return Object.entries(categories)
@@ -264,6 +265,9 @@
     return Object.keys(catalog).filter(
       (id) => category === "all" || catalog[id].category === category,
     );
+  }
+  function searchMarkup() {
+    return `<label class="dp-search"><span>🔎</span><input id="gameSearch" type="search" value="${safeText(librarySearch)}" placeholder="Procurar um jogo pelo nome" autocomplete="off" spellcheck="false"><button id="clearGameSearch" type="button" aria-label="Limpar pesquisa" class="${librarySearch ? "" : "hidden"}">×</button></label>`;
   }
   function parentLockMarkup() {
     const configured = parental?.status().configured;
@@ -339,17 +343,11 @@
     const view = document.querySelector("#dpView");
     if (tab === "home") {
       const ids = Object.keys(catalog).filter(installed);
-      view.innerHTML = `<section class="dp-section"><div class="dp-title"><div><small>AS TUAS AVENTURAS</small><h2>Meus Jogos</h2></div><button data-go="library">+ Jogos</button></div>${ids.length ? `<div class="dp-grid">${ids.map((id) => card(id, "home")).join("")}</div>` : `<div class="dp-empty"><img src="assets/dinoplay-mascot.png" alt=""><h2>Ainda não instalaste nenhum jogo</h2><p>Escolhe aventuras seguras na nossa biblioteca.</p><button data-go="library">Explorar biblioteca</button></div>`}</section><section class="dp-section dp-home-library"><div class="dp-title"><div><small>NOVAS AVENTURAS</small><h2>Biblioteca</h2></div><button data-go="library">Ver todos ›</button></div><div class="dp-grid">${Object.keys(
-        catalog,
-      )
-        .map((id) => card(id, "home-library"))
-        .join(
-          "",
-        )}</div></section><div class="dp-safe"><span>🛡️</span><div><b>Diversão segura</b><small>Sem anúncios, sem chat e sem compras reais.</small></div></div>`;
+      view.innerHTML = `<section class="dp-section"><div class="dp-title"><div><small>AS TUAS AVENTURAS</small><h2>Meus Jogos</h2></div><button data-go="library">+ Jogos</button></div>${ids.length ? `<div class="dp-grid dp-my-games">${ids.map((id) => card(id, "home")).join("")}</div>` : `<div class="dp-empty"><img src="assets/dinoplay-mascot.png" alt=""><h2>Ainda não instalaste nenhum jogo</h2><p>Escolhe aventuras seguras na nossa biblioteca.</p><button data-go="library">Explorar biblioteca</button></div>`}</section><div class="dp-safe"><span>🛡️</span><div><b>Diversão segura</b><small>Sem anúncios, sem chat e sem compras reais.</small></div></div>`;
     } else if (tab === "library") {
       const ids = categoryGames(),
         label = tr(categories[category].label);
-      view.innerHTML = `<section class="dp-section"><div class="dp-title"><div><small>ESCOLHIDOS PARA CRIANÇAS</small><h2>Biblioteca</h2></div><span>${platform.installed.length}/${Object.keys(catalog).length} ${safeText(tr("instalados"))}</span></div><div class="dp-chips" role="group" aria-label="${safeText(tr("Categorias de jogos"))}">${categoryButtons()}</div><div class="dp-category-title"><b>${categories[category].icon} ${label}</b><small>${ids.length} ${safeText(tr(ids.length === 1 ? "jogo" : "jogos"))}</small></div><div class="dp-grid">${ids.map((id) => card(id, "library")).join("")}</div></section>`;
+      view.innerHTML = `<section class="dp-section"><div class="dp-title"><div><small>ESCOLHIDOS PARA CRIANÇAS</small><h2>Biblioteca</h2></div><span>${platform.installed.length}/${Object.keys(catalog).length} ${safeText(tr("instalados"))}</span></div>${searchMarkup()}<div class="dp-chips" role="group" aria-label="${safeText(tr("Categorias de jogos"))}">${categoryButtons()}</div><div class="dp-category-title"><b>${categories[category].icon} ${label}</b><small id="libraryResultCount">${ids.length} ${safeText(tr(ids.length === 1 ? "jogo" : "jogos"))}</small></div><div class="dp-grid dp-library-grid">${ids.map((id) => card(id, "library")).join("")}</div><div id="gameSearchEmpty" class="dp-search-empty hidden"><span>🦕🔍</span><b>Nenhum jogo encontrado</b><small>Experimenta outro nome ou escolhe outra categoria.</small></div></section>`;
     } else if (!parentOpen) view.innerHTML = parentLockMarkup();
     else
       view.innerHTML = `<section class="dp-section"><div class="dp-title"><div><small>GESTÃO SEGURA</small><h2>Área dos Pais</h2></div><button id="parentLock">Bloquear</button></div>${parentSecurityMarkup()}<div class="dp-parent-setting"><span>🌍</span><div><b>Multiplayer pela Internet</b><small>Permite jogar apenas com amigos aprovados pelos dois responsáveis.</small><em>${platform.onlineMultiplayerEnabled ? "Autorizado pelo responsável" : "Bloqueado por predefinição"}</em></div><button type="button" data-online-toggle class="${platform.onlineMultiplayerEnabled ? "on" : "off"}" aria-pressed="${platform.onlineMultiplayerEnabled}">${platform.onlineMultiplayerEnabled ? "ATIVO" : "BLOQUEADO"}</button></div>${platform.onlineMultiplayerEnabled ? `<div class="dp-child-profile"><span>🧒</span><div><b>Perfil da criança</b><small>Usa apenas o primeiro nome ou um apelido. Será visível somente aos amigos autorizados.</small></div><input id="childNicknameInput" maxlength="16" value="${childNickname().replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;")}" placeholder="Nome ou apelido"><button id="childNicknameSave">GUARDAR</button></div><div class="dp-friends"><div class="dp-friends-head"><div><b>Amigos autorizados</b><small>Os códigos só funcionam aqui, uma vez e durante 2 minutos.</small></div><button id="friendCodeCreate">＋ GERAR CÓDIGO</button></div><div id="friendCodeResult" class="hidden"></div><div class="dp-friend-accept"><input id="friendCodeInput" maxlength="11" autocapitalize="none" autocomplete="off" spellcheck="false" placeholder="Código do outro responsável"><button id="friendCodeAccept">ACEITAR AMIZADE</button></div><small id="friendMessage"></small><div class="dp-manage dp-friend-list">${friendRows()}</div></div>` : ""}<div class="dp-parent-note">💾 Remover um jogo liberta os ficheiros offline, mas mantém todo o progresso para uma futura reinstalação.</div><div class="dp-manage">${Object.keys(
@@ -368,6 +366,34 @@
     startFriendSync();
   }
   function bind() {
+    const gameSearch = document.querySelector("#gameSearch"),
+      applyGameSearch = () => {
+        if (!gameSearch) return;
+        librarySearch = gameSearch.value.trim();
+        const query = librarySearch.toLocaleLowerCase(),
+          cards = [...document.querySelectorAll(".dp-library-grid [data-game-id]")];
+        let visible = 0;
+        cards.forEach((item) => {
+          const game = catalog[item.dataset.gameId],
+            match = tr(game?.name || "").toLocaleLowerCase().includes(query);
+          item.classList.toggle("search-hidden", !match);
+          if (match) visible++;
+        });
+        document.querySelector("#gameSearchEmpty")?.classList.toggle("hidden", visible > 0);
+        document.querySelector(".dp-library-grid")?.classList.toggle("hidden", visible === 0);
+        const count = document.querySelector("#libraryResultCount");
+        if (count) count.textContent = `${visible} ${tr(visible === 1 ? "jogo" : "jogos")}`;
+        document.querySelector("#clearGameSearch")?.classList.toggle("hidden", !librarySearch);
+      };
+    if (gameSearch) {
+      gameSearch.addEventListener("input", applyGameSearch);
+      document.querySelector("#clearGameSearch")?.addEventListener("click", () => {
+        gameSearch.value = "";
+        applyGameSearch();
+        gameSearch.focus();
+      });
+      applyGameSearch();
+    }
     Object.entries({
       confirmParentPin: "Repetir PIN",
       parentRecovery: "Código de recuperação",
