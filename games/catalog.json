@@ -191,6 +191,30 @@
       "permissions": ["storage"],
       "license": "MIT",
       "author": "DinoPlay Team"
+    },
+    {
+      "id": "dinojam",
+      "name": "DinoJam",
+      "version": "1.0.0",
+      "runtime": "sandbox",
+      "entry": "games/community/dinojam/index.html",
+      "category": "puzzle",
+      "age": "5+",
+      "cover": "games/community/dinojam/cover.png",
+      "description": "Organiza veículos coloridos, transporta os dinos certos e resolve 30 puzzles de trânsito.",
+      "size": "4 MB",
+      "multiplayer": false,
+      "offline": true,
+      "assets": [
+        "games/community/dinojam/index.html",
+        "games/community/dinojam/style.css",
+        "games/community/dinojam/game.js",
+        "games/community/dinojam/cover.png",
+        "sdk/dinoplay-game-sdk.js"
+      ],
+      "permissions": ["storage"],
+      "license": "MIT",
+      "author": "DinoPlay Team"
     }
   ]
 }
