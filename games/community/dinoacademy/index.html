@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: blob:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:">
+  <title>DinoAcademy</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main id="app">
+    <section id="home" class="screen open home">
+      <div class="home-shade"></div>
+      <div class="home-card">
+        <span class="brand">DINOACADEMY</span>
+        <h1 id="homeTitle">The magical academy</h1>
+        <p id="homeSub">Explore six worlds full of fun challenges.</p>
+        <div class="progress-line"><div id="totalProgress"></div></div>
+        <small id="progressText"></small>
+        <button id="startButton" class="primary">EXPLORE</button>
+      </div>
+    </section>
+
+    <section id="map" class="screen map-screen">
+      <header class="topbar"><button id="mapBack" class="round">‹</button><div><span class="brand">DINOACADEMY</span><h2 id="mapTitle">Choose a world</h2></div><div class="star-pill">★ <b id="starCount">0</b></div></header>
+      <div id="worldGrid" class="world-grid"></div>
+    </section>
+
+    <section id="levels" class="screen levels-screen">
+      <header class="topbar"><button id="levelsBack" class="round">‹</button><div><span id="worldEyebrow" class="brand"></span><h2 id="levelsTitle">Choose a challenge</h2></div><div id="worldIcon" class="world-icon"></div></header>
+      <div id="levelGrid" class="level-grid"></div>
+    </section>
+
+    <section id="game" class="screen game-screen">
+      <header class="gamebar"><button id="gameBack" class="round">‹</button><div class="game-progress"><span id="levelLabel">LEVEL</span> <b id="levelNumber">1</b><div><i id="roundProgress"></i></div></div><div class="hearts" id="hearts">♥♥♥</div><button id="soundButton" class="round">🔊</button></header>
+      <div class="challenge-wrap">
+        <div id="mascot" class="mascot">🦖</div>
+        <div class="speech"><p id="instruction"></p><h2 id="question"></h2></div>
+        <div id="visual" class="visual"></div>
+        <div id="answers" class="answers"></div>
+        <div id="feedback" class="feedback" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <section id="result" class="screen result-screen">
+      <div class="result-card"><div class="result-dino">🦕</div><div id="resultStars" class="result-stars">★★★</div><h2 id="resultTitle">Brilliant!</h2><p id="resultText"></p><button id="nextButton" class="primary">NEXT CHALLENGE</button><button id="retryButton" class="secondary">PLAY AGAIN</button><button id="resultMap" class="text-button">BACK TO WORLDS</button></div>
+    </section>
+  </main>
+  <script src="../../../sdk/dinoplay-game-sdk.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>
