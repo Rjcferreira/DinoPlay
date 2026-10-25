@@ -1,6 +1,6 @@
 # Contribuir para o DinoPlay
 
-O repositório `dinoplay-app` contém apenas a plataforma. Cada jogo vive num repositório público independente criado a partir de [dinoplay-game-template](https://github.com/Rjcferreira/dinoplay-game-template).
+O repositório `DinoPlay` contém apenas a plataforma. Cada jogo vive num repositório público independente criado a partir de [dinoplay-game-template](https://github.com/Rjcferreira/dinoplay-game-template).
 
 ## Publicar um jogo
 

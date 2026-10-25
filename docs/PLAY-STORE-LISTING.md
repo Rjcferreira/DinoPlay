@@ -54,8 +54,8 @@ Some online features require an Internet connection. Installed games that suppor
 - Público-alvo: a partir dos 5 anos; responder de forma coerente ao questionário etário.
 - Anúncios: não.
 - Compras na aplicação: não, enquanto o sistema de pagamentos estiver desativado.
-- Política de privacidade: https://rjcferreira.github.io/dinoplay-app/privacy.html
-- Website: https://rjcferreira.github.io/dinoplay-app/
+- Política de privacidade: https://rjcferreira.github.io/DinoPlay/privacy.html
+- Website: https://rjcferreira.github.io/DinoPlay/
 - Email de suporte: **PREENCHER ANTES DA SUBMISSÃO**.
 
 ## Materiais gráficos

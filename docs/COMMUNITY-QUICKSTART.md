@@ -5,6 +5,6 @@
 3. Use `DinoPlay.ready()`, `DinoPlay.storage` e, quando autorizado, `DinoPlay.multiplayer`.
 4. Execute `node scripts/validate.mjs` e confirme a validação do GitHub.
 5. Crie uma release `vX.Y.Z` e ative GitHub Pages na raiz da branch `main`.
-6. Proponha a entrada em `games/registry.json` no repositório `dinoplay-app`.
+6. Proponha a entrada em `games/registry.json` no repositório `DinoPlay`.
 
 A app descarrega os ficheiros diretamente da release indicada. Uma alteração na branch principal nunca chega às crianças sem uma nova versão e revisão do catálogo.

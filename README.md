@@ -29,6 +29,6 @@ Execute `node scripts/build-remote-catalog.mjs`, `node scripts/validate-catalog.
 
 ## Jogar e instalar
 
-A versão web está disponível em [DinoPlay](https://rjcferreira.github.io/dinoplay-app/). A aplicação Android para a Google Play usa Capacitor e guarda apenas os jogos escolhidos pela família.
+A versão web está disponível em [DinoPlay](https://rjcferreira.github.io/DinoPlay/). A aplicação Android para a Google Play usa Capacitor e guarda apenas os jogos escolhidos pela família.
 
 Para preparar o projeto Android, execute `cd mobile`, `npm install` e `npm run sync`. As instruções de compilação e publicação estão em [mobile/README.md](mobile/README.md) e [docs/GOOGLE-PLAY-RELEASE.md](docs/GOOGLE-PLAY-RELEASE.md).
