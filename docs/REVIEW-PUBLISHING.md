@@ -2,9 +2,9 @@
 
 ## Estados oficiais
 
-1. **Validação aprovada** — os testes automáticos passaram. Ainda não é aprovação nem publicação.
-2. **Revisão aprovada** — um mantenedor verificou código, conteúdo, licenças, segurança e funcionamento.
-3. **Integrado** — o pull request foi unido à branch `main`. Só este passo aceita a contribuição.
+1. **Primeira versão validada** — os testes automáticos passaram. Ainda não é aprovação.
+2. **Primeira versão aprovada** — o responsável verificou código, conteúdo, licenças, segurança e funcionamento e integrou o repositório no catálogo.
+3. **Atualização automática** — após essa aprovação inicial, uma release estável mais recente é detetada, testada e publicada automaticamente. Uma falha em qualquer teste mantém a versão anterior.
 4. **Publicado** — o GitHub Pages terminou com sucesso e o manifesto aparece no catálogo público.
 
 Um pull request aberto, com conflitos ou apenas com visto verde não está disponível na app.
@@ -27,4 +27,6 @@ O mantenedor confirma:
 
 Nunca se devem aceitar alterações a `platform.js`, `sw.js`, `shell.js` ou `index.html` vindas de uma contribuição de jogo. O jogo deve viver no próprio repositório; o pull request da biblioteca altera apenas `games/registry.json` e o catálogo gerado.
 
-Após o merge, confirme que a ação de publicação terminou, que o manifesto responde no endereço público e que o número de jogos do catálogo aumentou. Para atualizações, confirme que a versão publicada é superior à anterior.
+Após a primeira integração, confirme que a ação de publicação terminou, que o manifesto responde no endereço público e que o número de jogos do catálogo aumentou. As atualizações posteriores não alteram manualmente o registo: a ação `Atualizar jogos aprovados` aceita apenas versões superiores e preserva a identidade do jogo.
+
+Alterações materiais de permissões, recolha de dados, multiplayer, monetização ou idade não devem ser tratadas como atualização normal e exigem revisão humana. Os responsáveis podem denunciar qualquer jogo diretamente na Área dos Pais; o relatório não inclui identidade da criança nem dados do dispositivo.

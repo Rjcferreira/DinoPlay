@@ -348,6 +348,15 @@
     const hasProfile = Boolean(window.DinoPlayMultiplayer?.hasIdentity());
     return `<div class="dp-data-card about"><b>🦕 Quem somos</b><p>O DinoPlay nasceu de uma necessidade real de um grupo privado de pais: criar um espaço seguro, divertido e positivo para os nossos filhos.</p><a href="./about.html" target="_blank" rel="noopener">CONHECER A NOSSA HISTÓRIA</a></div><div class="dp-data-card community"><b>💬 Comunidade DinoPlay</b><p>Um espaço no Discord destinado exclusivamente a pais e programadores. Não é uma área para crianças.</p><a href="https://discord.gg/f22q9cQYNp" target="_blank" rel="noopener noreferrer">ENTRAR NA COMUNIDADE</a></div><div class="dp-data-card"><b>🛡️ Dados e privacidade</b><p>O progresso dos jogos e o PIN parental ficam neste dispositivo. Se o multiplayer for usado, o serviço guarda um identificador aleatório, o apelido e as amizades autorizadas.</p><a href="./privacy.html" target="_blank" rel="noopener">LER POLÍTICA DE PRIVACIDADE</a></div><div class="dp-data-card danger"><b>Apagar perfil multiplayer</b><p>Remove do servidor o apelido, todas as amizades e a identificação multiplayer deste dispositivo. O progresso dos jogos e o PIN parental não são apagados.</p><button id="deleteMultiplayerProfile" type="button" ${hasProfile ? "" : "disabled"}>${profileDeleteConfirm ? "CONFIRMAR ELIMINAÇÃO" : hasProfile ? "APAGAR PERFIL MULTIPLAYER" : "NÃO EXISTE PERFIL MULTIPLAYER"}</button><small id="profileDeleteMessage" role="status"></small></div>`;
   }
+  function parentReportsMarkup() {
+    const options = Object.entries(catalog)
+      .map(
+        ([id, game]) =>
+          `<option value="${safeText(id)}">${safeText(tr(game.name))} · v${safeText(game.version)}</option>`,
+      )
+      .join("");
+    return `<div class="dp-report-info"><b>🚩 Denunciar um jogo</b><p>Esta área é exclusiva para responsáveis. O relatório não envia o nome da criança, contactos, identificadores do dispositivo nem o progresso do jogo.</p></div><form id="gameReportForm" class="dp-report-form"><label>Jogo<select id="reportGame" required><option value="">Escolher jogo</option>${options}</select></label><label>Tipo de problema<select id="reportKind" required><option value="bug">Erro ou bloqueio</option><option value="inappropriate-content">Conteúdo inadequado</option><option value="privacy-security">Privacidade ou segurança</option><option value="accessibility">Acessibilidade</option><option value="other">Outro</option></select></label><label>O que aconteceu?<textarea id="reportDescription" minlength="10" maxlength="1500" required placeholder="Descreve o problema sem indicar nomes, contactos ou outros dados da criança."></textarea></label><label class="dp-report-confirm"><input id="reportPrivacy" type="checkbox" required><span>Confirmo que não incluí dados pessoais de uma criança.</span></label><button id="sendGameReport" type="submit">ENVIAR DENÚNCIA</button><small id="reportMessage" role="status"></small></form>`;
+  }
   function applyParentPage(view) {
     const title = view.querySelector(":scope > .dp-section > .dp-title");
     if (!title) return;
@@ -358,6 +367,7 @@
       ["friends", "👨‍👩‍👧", "Amigos"],
       ["games", "🎮", "Jogos"],
       ["extras", "🛍️", "Extras"],
+      ["reports", "🚩", "Denúncias"],
       ["privacy", "🛡️", "Privacidade"],
     ]
       .map(
@@ -385,6 +395,8 @@
     );
     if (parentPage === "extras")
       nav.insertAdjacentHTML("afterend", parentExtrasMarkup());
+    if (parentPage === "reports")
+      nav.insertAdjacentHTML("afterend", parentReportsMarkup());
     if (parentPage === "privacy")
       nav.insertAdjacentHTML("afterend", parentPrivacyMarkup());
     if (parentPage === "friends" && !platform.onlineMultiplayerEnabled)
@@ -763,6 +775,52 @@
             "Não foi possível apagar o perfil. Verifica a Internet.",
             "bad",
           );
+        }
+      });
+    document
+      .querySelector("#gameReportForm")
+      ?.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const gameId = document.querySelector("#reportGame").value,
+          game = catalog[gameId],
+          description = document.querySelector("#reportDescription").value.trim(),
+          message = document.querySelector("#reportMessage"),
+          button = document.querySelector("#sendGameReport");
+        if (!game || description.length < 10 || !document.querySelector("#reportPrivacy").checked) {
+          message.textContent = tr("Preenche todos os campos e confirma a privacidade.");
+          return;
+        }
+        button.disabled = true;
+        message.textContent = tr("A enviar a denúncia em segurança…");
+        try {
+          const response = await fetch(
+            "https://dinoplay-community.dinoplay-multiplayer.workers.dev/reports/game",
+            {
+              method: "POST",
+              headers: { "content-type": "application/json" },
+              body: JSON.stringify({
+                gameId,
+                gameName: game.name,
+                gameVersion: game.version,
+                kind: document.querySelector("#reportKind").value,
+                description,
+                appVersion: window.DINOPLAY_VERSION || "",
+                language: window.DinoI18n?.language || navigator.language || "en",
+              }),
+            },
+          );
+          const result = await response.json().catch(() => ({}));
+          if (!response.ok) throw new Error(result.error || "report-failed");
+          event.target.reset();
+          message.textContent = `${tr("Denúncia enviada. Obrigado.")} #${result.report}`;
+          toast("✅ Denúncia enviada aos responsáveis");
+        } catch (error) {
+          message.textContent =
+            error.message === "rate-limited"
+              ? tr("Foram enviadas demasiadas denúncias. Tenta novamente mais tarde.")
+              : tr("Não foi possível enviar agora. Verifica a Internet.");
+        } finally {
+          button.disabled = false;
         }
       });
     document.querySelectorAll("[data-remove]").forEach(

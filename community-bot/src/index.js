@@ -382,6 +382,119 @@ function ownerRepo(env) {
   return { owner, repo };
 }
 
+function reportCors(request, env) {
+  const origin = request.headers.get("origin") || "";
+  const allowed = new Set([
+    env.ALLOWED_ORIGIN,
+    "capacitor://localhost",
+    "http://localhost",
+    "https://localhost",
+  ]);
+  return allowed.has(origin)
+    ? {
+        "access-control-allow-origin": origin,
+        "access-control-allow-methods": "POST, OPTIONS",
+        "access-control-allow-headers": "content-type",
+        vary: "Origin",
+      }
+    : {};
+}
+
+async function reportRateKey(request) {
+  const source = request.headers.get("cf-connecting-ip") || "unknown";
+  const digest = await crypto.subtle.digest(
+    "SHA-256",
+    new TextEncoder().encode(source),
+  );
+  return `game-report:${bytesToHex(new Uint8Array(digest)).slice(0, 24)}`;
+}
+
+async function handleGameReport(request, env) {
+  const cors = reportCors(request, env);
+  if (!cors["access-control-allow-origin"])
+    return json({ error: "origin-not-allowed" }, 403, cors);
+  if (!request.headers.get("content-type")?.includes("application/json"))
+    return json({ error: "invalid-content-type" }, 415, cors);
+  const key = await reportRateKey(request);
+  const count = Number((await env.AUDIT?.get(key)) || 0);
+  if (count >= 5) return json({ error: "rate-limited" }, 429, cors);
+  const body = await request.json();
+  const gameId = safeText(body.gameId, 60);
+  const gameName = safeText(body.gameName, 100);
+  const gameVersion = safeText(body.gameVersion, 30);
+  const kind = safeText(body.kind, 50);
+  const description = safeText(body.description, 1500);
+  const appVersion = safeText(body.appVersion, 30);
+  const language = safeText(body.language, 15);
+  const allowedKinds = new Set([
+    "bug",
+    "inappropriate-content",
+    "privacy-security",
+    "accessibility",
+    "other",
+  ]);
+  if (!gameId || !gameName || !gameVersion || !allowedKinds.has(kind) || description.length < 10)
+    return json({ error: "invalid-report" }, 400, cors);
+  const reportBody = [
+        "## Denúncia enviada pela Área dos Pais",
+        "",
+        `- **Jogo:** ${gameName} (\`${gameId}\`)`,
+        `- **Versão do jogo:** ${gameVersion}`,
+        `- **Tipo:** ${kind}`,
+        `- **Versão DinoPlay:** ${appVersion || "não indicada"}`,
+        `- **Idioma:** ${language || "não indicado"}`,
+        "",
+        "## Descrição",
+        description,
+        "",
+        "> Relatório criado sem nome, contacto, identificador do dispositivo ou dados da criança.",
+      ].join("\n");
+  let report;
+  if (
+    env.GITHUB_TOKEN ||
+    (env.GITHUB_APP_ID && env.GITHUB_PRIVATE_KEY && env.GITHUB_INSTALLATION_ID)
+  ) {
+    const { owner, repo } = ownerRepo(env);
+    const issue = await github(env, `/repos/${owner}/${repo}/issues`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        title: `[Denúncia parental] ${gameName} · ${kind}`,
+        labels: ["game-report"],
+        body: reportBody,
+      }),
+    });
+    report = String(issue.number);
+  } else {
+    const message = await discordMessage(
+      env,
+      "🚩 Nova denúncia enviada por um responsável na app DinoPlay",
+      [
+        {
+          title: `${gameName} · ${kind}`,
+          description: description.slice(0, 4000),
+          color: 12337240,
+          fields: [
+            { name: "Jogo", value: `${gameId} · v${gameVersion}`, inline: true },
+            { name: "DinoPlay", value: `v${appVersion || "—"}`, inline: true },
+            { name: "Privacidade", value: "Sem dados da criança ou do dispositivo" },
+          ],
+        },
+      ],
+      env.DISCORD_CHANNEL_SECURITY,
+    );
+    report = String(message.id).slice(-8);
+  }
+  await env.AUDIT?.put(key, String(count + 1), { expirationTtl: 3600 });
+  await audit(env, "game.report", {
+    gameId,
+    gameVersion,
+    kind,
+    report,
+  });
+  return json({ ok: true, report }, 201, cors);
+}
+
 async function secureEqual(a, b) {
   const [left, right] = await Promise.all([
     crypto.subtle.digest("SHA-256", new TextEncoder().encode(a)),
@@ -1084,6 +1197,10 @@ export default {
         });
       if (request.method === "POST" && url.pathname === "/discord/interactions")
         return handleDiscord(request, env);
+      if (request.method === "OPTIONS" && url.pathname === "/reports/game")
+        return new Response(null, { status: 204, headers: reportCors(request, env) });
+      if (request.method === "POST" && url.pathname === "/reports/game")
+        return handleGameReport(request, env);
       if (request.method === "POST" && url.pathname === "/github/webhook")
         return handleGithub(request, env);
       if (request.method === "POST" && url.pathname === "/mcp")

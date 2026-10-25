@@ -113,6 +113,17 @@ requireText(
   "deleteMultiplayerProfile",
   "eliminação do perfil multiplayer",
 );
+requireText(platform, "parentReportsMarkup", "denúncia protegida na Área dos Pais");
+requireText(
+  platform,
+  "dinoplay-community.dinoplay-multiplayer.workers.dev/reports/game",
+  "envio seguro de denúncias para o serviço comunitário",
+);
+requireText(
+  index,
+  "https://dinoplay-community.dinoplay-multiplayer.workers.dev",
+  "ligação limitada ao serviço de denúncias aprovado",
+);
 requireText(sdk, "event.source!==parent", "respostas apenas do anfitrião");
 requireText(
   sdk,

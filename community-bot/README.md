@@ -6,6 +6,7 @@ Serviço privado que liga Discord, GitHub e o plugin MCP DinoPlay. Não recebe n
 
 - `GET /health` — estado sem revelar segredos.
 - `POST /discord/interactions` — interações assinadas do Discord.
+- `POST /reports/game` — recebe denúncias anónimas enviadas exclusivamente pela Área dos Pais, com limite por origem e sem dados da criança.
 - `POST /github/webhook` — eventos assinados da GitHub App.
 - `POST /mcp` — ferramentas autenticadas para Codex/ChatGPT.
 
