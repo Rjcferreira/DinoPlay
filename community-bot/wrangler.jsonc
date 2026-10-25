@@ -5,7 +5,7 @@
   "compatibility_date": "2026-10-24",
   "compatibility_flags": ["nodejs_compat"],
   "vars": {
-    "GITHUB_REPOSITORY": "Rjcferreira/dino-color-quiz",
+    "GITHUB_REPOSITORY": "Rjcferreira/dinoplay-app",
     "COMMUNITY_NAME": "DinoPlay Community",
     "ALLOWED_ORIGIN": "https://rjcferreira.github.io",
     "DISCORD_GUILD_ID": "1275853368241164409",

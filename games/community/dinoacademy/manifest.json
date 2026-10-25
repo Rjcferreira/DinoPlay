@@ -1,4 +1,0 @@
-{
-  "id":"dinoacademy","name":"DinoAcademy","version":"1.0.0","runtime":"sandbox","entry":"games/community/dinoacademy/index.html","category":"learn","age":"5+","cover":"games/community/dinoacademy/cover.png","description":"Explora números, letras, lógica, memória, formas e natureza em 30 desafios educativos.","size":"5 MB","multiplayer":false,"offline":true,
-  "assets":["games/community/dinoacademy/index.html","games/community/dinoacademy/style.css","games/community/dinoacademy/game.js","games/community/dinoacademy/cover.png","sdk/dinoplay-game-sdk.js"],"permissions":["storage"],"license":"MIT","author":"DinoPlay Team"
-}

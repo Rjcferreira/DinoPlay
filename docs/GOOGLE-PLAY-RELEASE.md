@@ -6,7 +6,7 @@ Este documento é a checklist de lançamento. Não se deve publicar antes de tod
 
 - Formato Android: **Capacitor 8**, com os ficheiros essenciais incluídos no pacote e sem plugins de permissões sensíveis. A TWA foi rejeitada como arquitetura porque o próprio Bubblewrap avisa que é incompatível com aplicações dirigidas a menores de 13 anos, e a política Families não permite uma aplicação que seja apenas um invólucro de um website.
 - ID de pacote proposto: `io.github.rjcferreira.dinoplay`. O ID torna-se permanente depois da primeira publicação; confirme-o antes de criar a aplicação na Play Console.
-- URL inicial: `https://rjcferreira.github.io/dino-color-quiz/?app=dinoplay`.
+- URL inicial: `https://rjcferreira.github.io/dinoplay-app/?app=dinoplay`.
 - API alvo: Android 16 / API 36 para novas submissões a partir de 31 de agosto de 2026.
 - Sem permissões de localização, câmara, microfone, contactos, telefone, ficheiros, Bluetooth ou identificador de publicidade.
 
@@ -29,7 +29,7 @@ O `assetlinks.json` só é necessário se forem ativados Android App Links para 
 - Anúncios: **Não contém anúncios**.
 - Compras: **Não** enquanto o sistema de pagamentos estiver desativado. Qualquer futura venda digital tem de usar Google Play Billing e validação no servidor.
 - Acesso à app: explicar que a Área dos Pais usa um PIN criado localmente; o revisor pode criar qualquer PIN de 4 a 6 números.
-- Política de privacidade: `https://rjcferreira.github.io/dino-color-quiz/privacy.html`.
+- Política de privacidade: `https://rjcferreira.github.io/dinoplay-app/privacy.html`.
 - Classificação de conteúdo: responder de acordo com cada jogo disponível no catálogo. Uma contribuição nova obriga a rever esta classificação.
 - App content / Families: confirmar ausência de chat, anúncios, localização, contactos e perfis públicos; multiplayer privado e bloqueado por predefinição.
 - Registar o package name e confirmar a identidade do programador, exigido desde 30 de setembro de 2026.

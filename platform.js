@@ -60,6 +60,7 @@
       ],
     },
   };
+  catalog = {};
   const categories = {
     all: { icon: "🎮", label: "Todos" },
     learn: { icon: "🧠", label: "Aprender" },
@@ -149,7 +150,57 @@
     value.length < 180 &&
     !/^(?:[a-z]+:|\/\/|\/)/i.test(value) &&
     !value.split(/[\\/]/).includes("..");
+  const safeSourceBase = (value) => {
+    if (typeof value !== "string" || value.length > 240) return false;
+    try {
+      const url = new URL(value);
+      return (
+        url.protocol === "https:" &&
+        url.hostname === "raw.githubusercontent.com" &&
+        /^\/Rjcferreira\/dinoplay-[a-z0-9-]+\/v\d+\.\d+\.\d+\/$/.test(
+          url.pathname,
+        )
+      );
+    } catch {
+      return false;
+    }
+  };
   const assetPath = (value) => (value.startsWith("./") ? value : `./${value}`);
+  const gameRoot = (game) =>
+    `./__dinoplay_games/${game.id}/${game.version}/`;
+  const installedAssetPath = (game, value) => `${gameRoot(game)}${value}`;
+  const sourceAssetUrl = (game, value) =>
+    new URL(value, game.sourceBase).href;
+  const nativeFilesystem = window.Capacitor?.Plugins?.Filesystem;
+  const nativeMode = Boolean(
+    nativeFilesystem && window.Capacitor?.isNativePlatform?.(),
+  );
+  const nativeGameDirectory = (game) =>
+    `dinoplay-games/${game.id}/${game.version}`;
+  async function clearGamePackage(game) {
+    if (nativeMode) {
+      await nativeFilesystem
+        .rmdir({
+          path: nativeGameDirectory(game),
+          directory: "DATA",
+          recursive: true,
+        })
+        .catch(() => {});
+    } else {
+      await caches.delete(gameCacheName(game.id, game.version));
+    }
+  }
+  async function gameTarget(game) {
+    return nativeMode ? null : caches.open(gameCacheName(game.id, game.version));
+  }
+  async function installedGameUrl(game) {
+    if (!nativeMode) return new URL(game.entry, game.pageBase).href;
+    const result = await nativeFilesystem.getUri({
+      path: `${nativeGameDirectory(game)}/${game.entry}`,
+      directory: "DATA",
+    });
+    return window.Capacitor.convertFileSrc(result.uri);
+  }
   const tr = (value) => window.DinoI18n?.t(value) || value;
   function normalizeGame(game) {
     if (
@@ -158,19 +209,27 @@
       !safeLocalPath(game.cover) ||
       !Array.isArray(game.assets) ||
       !game.assets.every(safeLocalPath) ||
-      !["native", "sandbox"].includes(game.runtime) ||
+      game.runtime !== "sandbox" ||
+      !safeSourceBase(game.sourceBase) ||
+      typeof game.repository !== "string" ||
+      !/^https:\/\/github\.com\/Rjcferreira\/dinoplay-[a-z0-9-]+$/.test(
+        game.repository,
+      ) ||
+      !/^https:\/\/rjcferreira\.github\.io\/dinoplay-[a-z0-9-]+\/$/.test(
+        game.pageBase,
+      ) ||
       !categories[game.category]
     )
       throw new Error("invalid-game");
-    if (game.runtime === "sandbox" && !safeLocalPath(game.entry))
+    if (!safeLocalPath(game.entry))
       throw new Error("invalid-entry");
     const style = categoryStyle[game.category];
     return {
       ...game,
       icon: game.icon || style.icon,
       tone: game.tone || style.tone,
-      cover: assetPath(game.cover),
-      assets: game.assets.map(assetPath),
+      cover: sourceAssetUrl(game, game.cover),
+      assets: [...game.assets],
     };
   }
   async function loadCatalog(showFeedback = false) {
@@ -182,7 +241,7 @@
       });
       if (!response.ok) throw new Error("catalog");
       const data = await response.json();
-      if (data.catalogVersion !== 1 || !Array.isArray(data.games))
+      if (data.catalogVersion !== 2 || !Array.isArray(data.games))
         throw new Error("catalog-version");
       const next = {};
       data.games.forEach((item) => {
@@ -749,13 +808,12 @@
     const targetName = gameCacheName(id, catalog[id].version);
     const previousVersion = platform.versions[id];
     try {
-      await caches.delete(targetName);
-      const cache = await caches.open(targetName),
-        assets = gameAssets(catalog[id]);
+      const game = catalog[id];
+      await clearGamePackage(game);
+      const cache = await gameTarget(game),
+        assets = gameAssets(game);
       for (let i = 0; i < assets.length; i++) {
-        const response = await fetch(assets[i], { cache: "reload" });
-        if (!response.ok) throw new Error("download");
-        await cache.put(assets[i], response);
+        await downloadGameAsset(cache, game, assets[i]);
         const bar = document.querySelector(`#install-${id}`);
         if (bar) bar.style.width = `${((i + 1) / assets.length) * 100}%`;
       }
@@ -767,7 +825,7 @@
       window.celebrate?.();
       toast(`${catalog[id].icon} ${catalog[id].name} instalado!`);
     } catch (e) {
-      await caches.delete(targetName);
+      await clearGamePackage(catalog[id]);
       platform.installed = platform.installed.filter((gameId) => gameId !== id);
       if (previousVersion) platform.versions[id] = previousVersion;
       else delete platform.versions[id];
@@ -827,22 +885,22 @@
       stageName = gameCacheName(id, game.version),
       previousVersion = platform.versions[id];
     try {
-      await caches.delete(stageName);
-      const stage = await caches.open(stageName);
+      await clearGamePackage(game);
+      const stage = await gameTarget(game);
       for (const asset of assets) {
-        const response = await fetch(asset, { cache: "reload" });
-        if (!response.ok) throw new Error(`download-${response.status}`);
-        await stage.put(asset, response);
+        await downloadGameAsset(stage, game, asset);
       }
-      for (const asset of assets)
-        if (!(await stage.match(asset))) throw new Error("stage-missing");
+      if (!nativeMode)
+        for (const asset of assets)
+          if (!(await stage.match(installedAssetPath(game, asset))))
+            throw new Error("stage-missing");
       platform.versions[id] = game.version;
       savePlatform();
       if (previousVersion && previousVersion !== game.version)
-        await caches.delete(gameCacheName(id, previousVersion));
+        await clearGamePackage({ ...game, version: previousVersion });
     } catch (error) {
       platform.versions[id] = previousVersion;
-      await caches.delete(stageName);
+      await clearGamePackage(game);
       throw error;
     }
   }
@@ -853,39 +911,66 @@
     savePlatform();
     removeConfirm = null;
     try {
-      await caches.delete(gameCacheName(id, game.version));
-      const cache = await caches.open(gameCache),
-        needed = new Set(
-          platform.installed.flatMap((x) =>
-            catalog[x] ? gameAssets(catalog[x]) : [],
-          ),
-        );
-      await Promise.all(
-        gameAssets(game)
-          .filter((a) => !needed.has(a))
-          .map((a) => cache.delete(a)),
-      );
+      await clearGamePackage(game);
     } catch (e) {}
     render();
     toast(`${game.name} removido. O progresso foi mantido.`);
   }
   function gameAssets(game) {
-    return [
-      ...new Set([
-        ...(game.runtime === "sandbox"
-          ? [assetPath(game.entry), "./sdk/dinoplay-game-sdk.js?v=2"]
-          : []),
-        ...game.assets,
-      ]),
-    ];
+    return [...new Set([game.entry, ...game.assets])];
   }
-  function launchCommunityGame(id) {
+  const contentTypes = {
+    html: "text/html; charset=utf-8",
+    js: "text/javascript; charset=utf-8",
+    css: "text/css; charset=utf-8",
+    json: "application/json; charset=utf-8",
+    svg: "image/svg+xml",
+    png: "image/png",
+    jpg: "image/jpeg",
+    jpeg: "image/jpeg",
+    webp: "image/webp",
+    mp3: "audio/mpeg",
+    wav: "audio/wav",
+  };
+  async function downloadGameAsset(cache, game, asset) {
+    const response = await fetch(sourceAssetUrl(game, asset), {
+      cache: "no-store",
+      referrerPolicy: "no-referrer",
+    });
+    if (!response.ok) throw new Error(`download-${response.status}`);
+    if (nativeMode) {
+      const bytes = new Uint8Array(await response.arrayBuffer());
+      let binary = "";
+      for (let offset = 0; offset < bytes.length; offset += 32768)
+        binary += String.fromCharCode(...bytes.subarray(offset, offset + 32768));
+      await nativeFilesystem.writeFile({
+        path: `${nativeGameDirectory(game)}/${asset}`,
+        data: btoa(binary),
+        directory: "DATA",
+        recursive: true,
+      });
+      return;
+    }
+    const extension = asset.split("?")[0].split(".").pop().toLowerCase();
+    const headers = new Headers(response.headers);
+    headers.set("Content-Type", contentTypes[extension] || "application/octet-stream");
+    headers.set("X-Content-Type-Options", "nosniff");
+    await cache.put(
+      installedAssetPath(game, asset),
+      new Response(await response.arrayBuffer(), {
+        status: 200,
+        headers,
+      }),
+    );
+  }
+  async function launchCommunityGame(id) {
     const game = catalog[id];
     if (!game || game.runtime !== "sandbox" || !safeLocalPath(game.entry))
       return;
     const overlay = document.createElement("section");
     overlay.className = "dp-runtime";
-    overlay.innerHTML = `<header><b>${safeText(game.name)}</b><button type="button" aria-label="Fechar jogo">✕</button></header><iframe title="${safeText(game.name)}" sandbox="allow-scripts allow-pointer-lock" allow="fullscreen" src="${safeText(assetPath(game.entry))}"></iframe>`;
+    const launchUrl = await installedGameUrl(game);
+    overlay.innerHTML = `<header><b>${safeText(game.name)}</b><button type="button" aria-label="Fechar jogo">✕</button></header><iframe title="${safeText(game.name)}" sandbox="allow-scripts allow-pointer-lock" allow="fullscreen" src="${safeText(launchUrl)}"></iframe>`;
     document.body.appendChild(overlay);
     document.body.classList.remove("dp-shell");
     const frame = overlay.querySelector("iframe"),

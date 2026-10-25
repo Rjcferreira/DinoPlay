@@ -1,4 +1,0 @@
-{
-  "id":"dinocontos","name":"DinoContos","version":"1.0.0","runtime":"sandbox","entry":"games/community/dinocontos/index.html","category":"learn","age":"4+","cover":"games/community/dinocontos/cover.png","description":"Ouve cinco histórias originais narradas, acompanha cada página e descobre valores importantes.","size":"16 MB","multiplayer":false,"offline":true,
-  "assets":["games/community/dinocontos/index.html","games/community/dinocontos/style.css","games/community/dinocontos/game.js","games/community/dinocontos/cover.png","games/community/dinocontos/art/lumi.png","games/community/dinocontos/art/tico.png","games/community/dinocontos/art/mara.png","games/community/dinocontos/art/pipo.png","games/community/dinocontos/art/festa.png","sdk/dinoplay-game-sdk.js"],"permissions":["storage"],"license":"MIT","author":"DinoPlay Team"
-}

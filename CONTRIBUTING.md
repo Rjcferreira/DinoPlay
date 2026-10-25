@@ -1,75 +1,27 @@
-# Contribuir com jogos para DinoPlay
+# Contribuir para o DinoPlay
 
-Este guia descreve o processo completo. Um visto verde do GitHub significa apenas que os testes automáticos passaram; o jogo só fica disponível depois de revisão humana, merge na `main` e publicação do GitHub Pages.
+O repositório `dinoplay-app` contém apenas a plataforma. Cada jogo vive num repositório público independente criado a partir de [dinoplay-game-template](https://github.com/Rjcferreira/dinoplay-game-template).
 
-## 1. Ficheiros permitidos
+## Publicar um jogo
 
-Uma contribuição de jogo novo pode alterar exclusivamente:
+1. Use o botão **Use this template** no modelo oficial.
+2. Crie um repositório chamado `dinoplay-<nome-do-jogo>`.
+3. Preencha `manifest.json`, mantenha todos os recursos listados em `assets` e execute `node scripts/validate.mjs`.
+4. Garanta que o jogo funciona sem anúncios, chat, rastreadores, login próprio ou endereços externos.
+5. Crie uma versão Git imutável no formato `v1.2.3`.
+6. Abra um pull request na app alterando apenas `games/registry.json`.
 
-- `games/community/<id>/**` — todos os ficheiros do jogo;
-- `games/catalog.json` — uma única entrada para o jogo;
-- `scripts/test-<id>*.cjs` ou `.mjs` — testes opcionais do próprio jogo.
+O catálogo é gerado por `node scripts/build-remote-catalog.mjs`. A validação confirma o manifesto, todos os ficheiros remotos e a página publicada antes de aceitar a contribuição.
 
-Não altere `platform.js`, `app.js`, `sw.js`, `index.html`, o SDK, o controlo parental, o sistema de atualizações, o multiplayer, jogos oficiais ou as versões do DinoPlay. Se o jogo precisar de uma nova capacidade da plataforma, descreva-a no pull request; o mantenedor implementa-a separadamente.
+## Atualizar um jogo
 
-Uma atualização de jogo existente segue a mesma regra e só pode alterar a pasta, a entrada de catálogo e os testes desse jogo.
+Publique uma nova versão no repositório do jogo e altere apenas o respetivo `tag` e `size` em `games/registry.json`. A app conserva a versão instalada até o novo pacote estar totalmente descarregado.
 
-## 2. Estrutura obrigatória
+## Segurança
 
-Crie `games/community/<id>/`, usando um identificador em minúsculas, sem espaços, por exemplo `cobrinhas-do-jardim`. A pasta deve conter:
+- Multiplayer exige o SDK DinoPlay e autorização parental bilateral.
+- Compras e extras só podem aparecer na Área dos Pais.
+- O idioma preferido é fornecido pelo SDK; cada jogo mantém as próprias traduções e usa inglês como fallback.
+- Nunca inclua segredos, tokens, dados pessoais ou conteúdo de crianças.
 
-- `index.html` como entrada;
-- `manifest.json` compatível com `games/game.schema.json`;
-- código e recursos locais;
-- `LICENSE` com a licença do código e dos recursos;
-- `README.md` com controlos, objetivo, autoria e origem dos recursos;
-- uma capa horizontal legível na biblioteca.
-
-Use apenas HTML, CSS, JavaScript e recursos auditáveis. Binários executáveis, código ofuscado, dependências remotas e ficheiros sem licença são recusados.
-
-São aceites imagens, áudio, vídeo local, fontes e modelos 3D (`glTF`/`GLB`). Cada ficheiro pode ter até 15 MB e o pacote completo até 50 MB, para preservar instalação e funcionamento aceitáveis em telemóveis.
-
-## 3. Manifesto e catálogo
-
-- Use sempre `runtime: "sandbox"` e `offline: true`.
-- `entry`, `cover` e cada item de `assets` devem estar dentro de `games/community/<id>/`, exceto o SDK oficial.
-- Inclua todos os ficheiros necessários em `assets`.
-- Declare apenas `storage` e, quando aprovado, `multiplayer` em `permissions`.
-- Copie para `games/catalog.json` exatamente os mesmos dados públicos do `manifest.json`.
-- Num jogo novo, comece em `1.0.0`. Numa atualização, aumente `MAJOR.MINOR.PATCH`.
-- Escolha uma categoria suportada: `learn`, `puzzle`, `create`, `explore`, `action`, `sports` ou `music`.
-
-Nunca aumente a versão da app nem altere parâmetros de cache. A plataforma deteta o catálogo automaticamente.
-
-## 4. Integração com DinoPlay
-
-Inclua `/sdk/dinoplay-game-sdk.js` no HTML e execute `await DinoPlay.ready()` antes de usar capacidades da plataforma. Use `DinoPlay.storage` para progresso e `DinoPlay.close()` para regressar à biblioteca. Não use `localStorage`, contas próprias ou acesso direto a dados do dispositivo.
-
-Multiplayer só pode usar `DinoPlay.multiplayer`; servidores, códigos, salas, chat ou listas de jogadores próprios são proibidos. Uma contribuição multiplayer exige revisão adicional do protocolo.
-
-Extras pagos seguem obrigatoriamente `docs/MONETIZATION.md`. O jogo declara os extras no manifesto e consulta apenas `DinoPlay.entitlements`; preços, pagamentos, promoções e recibos nunca pertencem ao jogo.
-
-## 5. Testes antes do envio
-
-Execute:
-
-```text
-node scripts/validate-catalog.mjs
-```
-
-Teste também instalação, modo avião depois de instalado, toque, ecrã pequeno, rotação, suspensão/regresso, botão de fechar, áudio e preservação do progresso. O jogo não pode continuar a gastar CPU ou reproduzir áudio quando estiver oculto.
-
-Execute também `node scripts/scan-community-security.mjs`. Para começar mais depressa, copie `contributor-kit/game-template` e siga `docs/COMMUNITY-QUICKSTART.md`.
-
-## 6. Pull request e publicação
-
-1. Atualize a sua branch com a `main` antes de abrir ou concluir o pull request.
-2. Abra o pull request e preencha toda a lista de verificação.
-3. O GitHub valida caminhos, manifesto, recursos e catálogo. Verde significa apenas “tecnicamente válido”.
-4. Um mantenedor revê segurança infantil, licenças, funcionamento e conteúdo.
-5. Só o merge na `main` significa “aceite”.
-6. O GitHub Pages publica o merge. Depois disso, jogos novos aparecem na biblioteca; versões superiores de jogos instalados são atualizadas automaticamente.
-
-Se houver conflitos, o pull request não está aprovado para publicação. Atualize a branch sem substituir ficheiros atuais da plataforma.
-
-Ao contribuir, confirma que possui direitos sobre todo o conteúdo e aceita `docs/CHILD-SAFETY.md`, `docs/GAME-SPEC.md`, `docs/MULTIPLAYER.md` e `docs/REVIEW-PUBLISHING.md`.
+Consulte também `docs/CHILD-SAFETY.md`, `docs/MULTIPLAYER.md`, `docs/CONTENT-POLICY.md` e `SECURITY.md`.

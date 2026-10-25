@@ -21,9 +21,8 @@ jobs:
           TARGET_SHA: ${{ github.event.pull_request.head.sha }}
         run: node scripts/validate-contribution.mjs
       - run: node scripts/validate-catalog.mjs
-      - run: node scripts/scan-community-security.mjs
+      - run: node scripts/audit-remote-games.mjs
       - run: node scripts/test-platform-contracts.mjs
       - run: node scripts/test-i18n.mjs
       - run: node scripts/test-multiplayer-presence.mjs
-      - run: node scripts/run-community-tests.mjs
       - run: node scripts/validate-play-release.mjs

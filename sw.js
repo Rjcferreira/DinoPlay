@@ -1,30 +1,23 @@
-const CACHE = "dinoplay-core-v162";
+const CACHE = "dinoplay-core-v165";
 const FILES = [
   "./",
   "./index.html",
   "./style.css?v=15",
-  "./world.css?v=32",
-  "./racer.css?v=14",
   "./platform.css?v=13",
   "./game-runtime.css?v=1",
-  "./platform.js?v=21",
+  "./platform.js?v=24",
   "./language.css?v=1",
   "./i18n.js?v=6",
   "./parental.js?v=1",
   "./multiplayer-core.js?v=3",
   "./multiplayer.js?v=9",
-  "./app.js?v=127",
-  "./racer.js?v=53",
+  "./shell.js?v=1",
   "./games/catalog.json?v=5",
-  "./sdk/dinoplay-game-sdk.js?v=2",
   "./version.json",
   "./dinoplay-v23.webmanifest",
   "./dinoplay-v23-192.png",
   "./dinoplay-v23-512.png",
   "./assets/dinoplay-mascot.png",
-  "./assets/dinoplay-puzzles.png",
-  "./assets/dinoplay-blocks.png",
-  "./assets/dinoplay-city.png",
   "./assets/flags/pt.svg",
   "./assets/flags/br.svg",
   "./assets/flags/gb.svg",
@@ -62,6 +55,19 @@ self.addEventListener("message", (e) => {
 self.addEventListener("fetch", (e) => {
   if (e.request.method !== "GET") return;
   const url = new URL(e.request.url);
+  if (url.pathname.includes("/__dinoplay_games/")) {
+    e.respondWith(
+      caches.match(e.request).then(
+        (response) =>
+          response ||
+          new Response("Jogo não instalado.", {
+            status: 404,
+            headers: { "Content-Type": "text/plain; charset=utf-8" },
+          }),
+      ),
+    );
+    return;
+  }
   if (e.request.mode === "navigate") {
     e.respondWith(
       fetch(e.request, { cache: "no-store" })

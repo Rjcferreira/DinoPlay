@@ -18,8 +18,9 @@
 ## Verificações obrigatórias
 
 - [ ] Li integralmente `CONTRIBUTING.md` e as regras em `docs/`.
-- [ ] Alterei apenas `games/community/<id>/**`, a minha entrada em `games/catalog.json` e testes `scripts/test-<id>*`.
-- [ ] Não alterei `platform.js`, `app.js`, `sw.js`, `index.html`, SDK, controlo parental, atualização ou versões da app.
+- [ ] O jogo vive num repositório independente criado a partir do modelo DinoPlay.
+- [ ] Alterei apenas `games/registry.json` e o catálogo gerado.
+- [ ] Não alterei `platform.js`, `shell.js`, `sw.js`, `index.html`, SDK, controlo parental ou versões da app.
 - [ ] O `manifest.json` e a entrada no catálogo são equivalentes e cumprem o esquema.
 - [ ] Todos os caminhos e recursos são locais, declarados e licenciados.
 - [ ] Mantive a política CSP do modelo e executei `node scripts/scan-community-security.mjs`.

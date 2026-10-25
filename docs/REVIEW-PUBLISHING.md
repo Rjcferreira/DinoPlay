@@ -25,6 +25,6 @@ O mantenedor confirma:
 
 ## Integração segura
 
-Nunca se devem aceitar alterações antigas a `platform.js`, `sw.js`, `app.js` ou `index.html` vindas de uma contribuição de jogo. Quando um pull request antigo tiver esses conflitos, integram-se apenas a pasta do jogo, a entrada do catálogo e os testes, todos sobre a versão atual da `main`.
+Nunca se devem aceitar alterações a `platform.js`, `sw.js`, `shell.js` ou `index.html` vindas de uma contribuição de jogo. O jogo deve viver no próprio repositório; o pull request da biblioteca altera apenas `games/registry.json` e o catálogo gerado.
 
 Após o merge, confirme que a ação de publicação terminou, que o manifesto responde no endereço público e que o número de jogos do catálogo aumentou. Para atualizações, confirme que a versão publicada é superior à anterior.

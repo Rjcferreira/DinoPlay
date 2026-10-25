@@ -1,6 +1,6 @@
 {
   "$schema":"https://json-schema.org/draft/2020-12/schema",
-  "$id":"https://rjcferreira.github.io/dino-color-quiz/games/game.schema.json",
+  "$id":"https://rjcferreira.github.io/dinoplay-app/games/game.schema.json",
   "title":"DinoPlay Game Manifest",
   "type":"object",
   "additionalProperties":false,

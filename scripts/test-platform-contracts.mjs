@@ -6,7 +6,7 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const read = (path) => readFile(resolve(root, path), "utf8");
 const [
   platform,
-  app,
+  shell,
   sdk,
   worker,
   index,
@@ -19,7 +19,7 @@ const [
   androidManifest,
 ] = await Promise.all([
   read("platform.js"),
-  read("app.js"),
+  read("shell.js"),
   read("sdk/dinoplay-game-sdk.js"),
   read("sw.js"),
   read("index.html"),
@@ -37,13 +37,13 @@ const requireText = (source, text, label) => {
 };
 const releaseVersion = JSON.parse(versionFile).version;
 requireText(
-  app,
-  `const APP_VERSION='${releaseVersion}'`,
+  shell,
+  `const APP_VERSION = "${releaseVersion}"`,
   "versão interna igual à versão publicada",
 );
 requireText(
-  app,
-  "window.DINOPLAY_VERSION=APP_VERSION",
+  shell,
+  "window.DINOPLAY_VERSION = APP_VERSION",
   "versão única partilhada com a interface",
 );
 requireText(
@@ -89,12 +89,12 @@ requireText(
 );
 requireText(
   platform,
-  "await caches.delete(targetName)",
+  "await clearGamePackage(game)",
   "reposição de instalação incompleta",
 );
 requireText(
   platform,
-  "if (!(await stage.match(asset)))",
+  "if (!(await stage.match(installedAssetPath(game, asset))))",
   "verificação do pacote antes de ativar atualização",
 );
 requireText(platform, "data-parent-page", "Área dos Pais multipágina");
@@ -149,8 +149,8 @@ requireText(
 );
 requireText(
   index,
-  "connect-src 'self' https://dinoplay-multiplayer.dinoplay-multiplayer.workers.dev wss://dinoplay-multiplayer.dinoplay-multiplayer.workers.dev",
-  "ligações limitadas ao serviço multiplayer",
+  "connect-src 'self' https://raw.githubusercontent.com https://dinoplay-multiplayer.dinoplay-multiplayer.workers.dev",
+  "ligações limitadas aos repositórios aprovados e ao serviço multiplayer",
 );
 requireText(
   multiplayerCore,

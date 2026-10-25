@@ -17,12 +17,12 @@ if(manifest.packageId!=='io.github.rjcferreira.dinoplay')throw new Error('Packag
 if(manifest.host!=='rjcferreira.github.io')throw new Error('Host TWA inesperado');
 if(manifest.minSdkVersion<26)throw new Error('minSdk abaixo do Android 8');
 if(manifest.enableNotifications!==false)throw new Error('Notificações devem estar desativadas');
-if(!manifest.startUrl.startsWith('/dino-color-quiz/'))throw new Error('startUrl fora do âmbito publicado');
+if(!manifest.startUrl.startsWith('/dinoplay-app/'))throw new Error('startUrl fora do âmbito publicado');
 const manifestUrl=new URL(manifest.webManifestUrl);
 const resolvedScope=new URL(webManifest.scope||'.',manifestUrl).pathname;
 const resolvedStart=new URL(webManifest.start_url||'.',manifestUrl).pathname;
-if(resolvedScope!=='/dino-color-quiz/')throw new Error('Âmbito PWA inválido');
-if(resolvedStart!=='/dino-color-quiz/')throw new Error('start_url PWA inválido');
+if(resolvedScope!=='/dinoplay-app/')throw new Error('Âmbito PWA inválido');
+if(resolvedStart!=='/dinoplay-app/')throw new Error('start_url PWA inválido');
 if(capacitor.appId!=='io.github.rjcferreira.dinoplay')throw new Error('App ID Android inesperado');
 if(!/^8\.(?:[5-9]|\d{2,})\./.test(mobilePackage.dependencies['@capacitor/android']))throw new Error('Capacitor Android sem correção de segurança 8.5+');
 if(!/compileSdkVersion\s*=\s*36/.test(androidVariables)||!/targetSdkVersion\s*=\s*36/.test(androidVariables))throw new Error('Android não aponta para API 36');
