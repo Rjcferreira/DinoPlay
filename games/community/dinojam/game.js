@@ -146,6 +146,7 @@
     cars = [],
     passengers = [],
     waiting = [],
+    animating = false,
     score = 0,
     mistakes = 0,
     running = false,
@@ -317,6 +318,7 @@
       const p = document.createElement("span");
       p.className = `passenger ${i === 0 ? "next" : ""}`;
       p.style.setProperty("--person", color.hex);
+      p.innerHTML = '<i class="dino-eye"></i><i class="dino-snout"></i><i class="dino-tail"></i>';
       line.appendChild(p);
     });
     if (passengers.length > 28) {
@@ -335,7 +337,9 @@
       if (waiting[i]) {
         const mini = document.createElement("span");
         mini.className = "mini-car";
+        mini.dataset.parkedId = waiting[i].id;
         mini.style.setProperty("--car", waiting[i].color.hex);
+        mini.innerHTML = '<i class="mini-window"></i><i class="wheel wheel-fl"></i><i class="wheel wheel-fr"></i><i class="wheel wheel-rl"></i><i class="wheel wheel-rr"></i>';
         slot.appendChild(mini);
       }
       box.appendChild(slot);
@@ -352,13 +356,32 @@
       b.dataset.id = car.id;
       b.style.cssText += `--car:${car.color.hex};--x:${car.x * w + w * 0.21}%;--y:${car.y * w + w * 0.03}%;--cw:${w * 0.58}%;--ch:${w * 0.94}%;`;
       if (horizontal) b.style.rotate = "90deg";
-      b.innerHTML = `<span class="car-arrow">${arrows[car.dir]}</span>`;
+      b.innerHTML = `<i class="car-window front"></i><i class="car-window rear"></i><i class="wheel wheel-fl"></i><i class="wheel wheel-fr"></i><i class="wheel wheel-rl"></i><i class="wheel wheel-rr"></i><i class="car-lights"></i><span class="car-arrow">${arrows[car.dir]}</span>`;
       b.onclick = () => selectCar(car.id);
       board.appendChild(b);
     });
   }
-  function selectCar(id) {
-    if (!running) return;
+  const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+  function flyElement(source, target, className) {
+    if (!source || !target) return Promise.resolve();
+    const a = source.getBoundingClientRect(), b = target.getBoundingClientRect();
+    const clone = source.cloneNode(true);
+    clone.classList.add(className);
+    clone.style.cssText += `;position:fixed;z-index:50;left:${a.left}px;top:${a.top}px;width:${a.width}px;height:${a.height}px;margin:0;rotate:0deg;transition:none;`;
+    document.body.appendChild(clone);
+    source.style.opacity = "0";
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      clone.style.transition = "left .48s cubic-bezier(.2,.75,.25,1),top .48s cubic-bezier(.2,.75,.25,1),width .48s,height .48s,transform .48s";
+      clone.style.left = `${b.left + b.width / 2 - a.width * .32}px`;
+      clone.style.top = `${b.top + b.height / 2 - a.height * .32}px`;
+      clone.style.width = `${a.width * .64}px`;
+      clone.style.height = `${a.height * .64}px`;
+      clone.style.transform = "rotate(360deg)";
+    }));
+    return sleep(510).then(() => clone.remove());
+  }
+  async function selectCar(id) {
+    if (!running || animating) return;
     const car = cars.find((c) => c.id === id),
       el = document.querySelector(`[data-id="${id}"]`);
     if (!car) return;
@@ -371,52 +394,60 @@
       tone(140, 0.12);
       return;
     }
-    const matches = passengers[0]?.id === car.color.id;
-    if (!matches && waiting.length >= levelData.bays) {
+    if (waiting.length >= levelData.bays) {
       mistakes++;
       score = Math.max(0, score - 40);
       toast(text.full);
       tone(120, 0.15);
       return;
     }
-    const exit = { U: [0, -130], R: [130, 0], D: [0, 130], L: [-130, 0] }[
-      car.dir
-    ];
-    el?.style.setProperty("--exit-x", `${exit[0]}vw`);
-    el?.style.setProperty("--exit-y", `${exit[1]}vh`);
-    el?.classList.add("leaving");
+    animating = true;
     cars.splice(cars.indexOf(car), 1);
-    setTimeout(() => {
-      if (matches) boardCar(car);
-      else {
-        waiting.push(car);
-        score = Math.max(0, score - 10);
-      }
-      processWaiting();
-      render();
-      if (!passengers.length) finish();
-    }, 300);
-    tone(matches ? 640 : 300);
+    waiting.push(car);
+    const slotIndex = waiting.length - 1;
+    const targetSlot = $("boardingSlots").children[slotIndex];
+    await flyElement(el, targetSlot, "parking-flight");
+    render();
+    if (passengers[0]?.id !== car.color.id) score = Math.max(0, score - 10);
+    await processWaiting();
+    animating = false;
+    if (!passengers.length) finish();
+    tone(640);
   }
-  function boardCar(car) {
+  async function boardCar(car) {
     let count = 0;
     while (
       passengers.length &&
       passengers[0].id === car.color.id &&
       count < 3
     ) {
+      const passenger = document.querySelector(".passenger.next");
+      const parked = document.querySelector(`[data-parked-id="${car.id}"]`);
+      if (passenger && parked) {
+        await flyElement(passenger, parked, "passenger-flight");
+      }
       passengers.shift();
       count++;
+      renderPassengers();
+      $("remaining").textContent = passengers.length;
     }
     score += count * 100;
+    const parked = document.querySelector(`[data-parked-id="${car.id}"]`);
+    if (parked) {
+      parked.classList.add("driving-out");
+      await sleep(620);
+    }
   }
-  function processWaiting() {
+  async function processWaiting() {
     let moved = true;
     while (moved && passengers.length) {
       moved = false;
       const i = waiting.findIndex((c) => c.color.id === passengers[0].id);
       if (i >= 0) {
-        boardCar(waiting.splice(i, 1)[0]);
+        const car = waiting[i];
+        await boardCar(car);
+        waiting.splice(i, 1);
+        renderSlots();
         moved = true;
       }
     }

@@ -195,7 +195,7 @@
     {
       "id": "dinojam",
       "name": "DinoJam",
-      "version": "2.0.0",
+      "version": "2.1.0",
       "runtime": "sandbox",
       "entry": "games/community/dinojam/index.html",
       "category": "puzzle",
