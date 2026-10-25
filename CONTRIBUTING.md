@@ -9,7 +9,7 @@ O repositório `DinoPlay` contém apenas a plataforma. Cada jogo vive num reposi
 3. Preencha `manifest.json`, mantenha todos os recursos listados em `assets` e execute `node scripts/validate.mjs`.
 4. Garanta que o jogo funciona sem anúncios, chat, rastreadores, login próprio ou endereços externos.
 5. Crie uma versão Git imutável no formato `v1.2.3`.
-6. Abra um pull request na app alterando apenas `games/registry.json` e o `games/catalog.json` gerado.
+6. Abra um pull request na app alterando apenas `games/registry.json` e o `games/catalog.json` gerado. Na entrada do registo indique também `owner` com o teu utilizador GitHub; a descarga, as atualizações e os créditos permanecem no teu repositório.
 
 O catálogo é gerado por `node scripts/build-remote-catalog.mjs`. A validação confirma o manifesto, todos os ficheiros remotos e a página publicada. Esta primeira entrada exige sempre aprovação do responsável DinoPlay.
 

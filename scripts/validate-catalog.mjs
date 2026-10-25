@@ -21,9 +21,9 @@ for(const game of data.games){
   if(game.offline!==true||typeof game.multiplayer!=='boolean')fail(`${game.id}: offline/multiplayer`);
   if(!safePath(game.cover)||!Array.isArray(game.assets)||!game.assets.length||!game.assets.every(safePath))fail(`${game.id}: recursos locais`);
   if(!safePath(game.entry))fail(`${game.id}: entry sandbox`);
-  if(!new RegExp(`^https://github\\.com/Rjcferreira/dinoplay-[a-z0-9-]+$`).test(game.repository||''))fail(`${game.id}: repositório`);
-  if(!new RegExp(`^https://raw\\.githubusercontent\\.com/Rjcferreira/dinoplay-[a-z0-9-]+/v\\d+\\.\\d+\\.\\d+/$`).test(game.sourceBase||''))fail(`${game.id}: origem da versão`);
-  if(!new RegExp(`^https://rjcferreira\\.github\\.io/dinoplay-[a-z0-9-]+/$`).test(game.pageBase||''))fail(`${game.id}: página do jogo`);
+  if(!/^https:\/\/github\.com\/[A-Za-z0-9-]{1,39}\/[A-Za-z0-9._-]{3,100}$/.test(game.repository||''))fail(`${game.id}: repositório`);
+  if(!/^https:\/\/raw\.githubusercontent\.com\/[A-Za-z0-9-]{1,39}\/[A-Za-z0-9._-]{3,100}\/(?:v\d+\.\d+\.\d+|[a-f0-9]{40})\/$/.test(game.sourceBase||''))fail(`${game.id}: origem da versão`);
+  if(!/^https:\/\/[a-z0-9-]{1,39}\.github\.io\/[A-Za-z0-9._-]{3,100}\/$/.test(game.pageBase||''))fail(`${game.id}: página do jogo`);
   if(game.runtime==='sandbox'&&(!Array.isArray(game.permissions)||game.permissions.some(permission=>!['storage','multiplayer','entitlements'].includes(permission))||new Set(game.permissions).size!==game.permissions.length))fail(`${game.id}: permissions`);
   if(game.extras!==undefined){if(!Array.isArray(game.extras)||game.extras.length>12||game.extras.some(extra=>!extra||!/^[-a-z0-9]{3,32}$/.test(extra.id||'')||typeof extra.name!=='string'||extra.name.length<2||extra.name.length>50||typeof extra.description!=='string'||extra.description.length<10||extra.description.length>140||extra.type!=='permanent')||new Set(game.extras.map(extra=>extra.id)).size!==game.extras.length)fail(`${game.id}: extras`);if(!game.permissions?.includes('entitlements'))fail(`${game.id}: extras exigem permissão entitlements`)}
   if(game.runtime==='sandbox'&&(typeof game.author!=='string'||game.author.length<2||game.author.length>50||typeof game.license!=='string'||game.license.length<2||game.license.length>30))fail(`${game.id}: autor/licença`);

@@ -36,3 +36,4 @@ body.dp-shell #bestLabel{color:#66829a;padding:18px 12px 105px;background:#fffdf
    a antiga faixa horizontal de jogos volte a comprimir todos os cartões. */
 .dp-grid.dp-library-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:15px;overflow:visible;margin:0;padding:2px 2px 15px}.dp-grid.dp-library-grid .dp-game{width:100%;min-width:0;max-width:none}.dp-grid.dp-library-grid .dp-cover{height:auto;aspect-ratio:1.28/1}.dp-grid.dp-library-grid .dp-game-info p{min-height:0}
 @media(min-width:700px){.dp-grid.dp-library-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.dp-game-author{display:block;margin-top:8px;color:#47758e;font-size:10px;font-weight:900}

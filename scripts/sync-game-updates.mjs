@@ -8,7 +8,7 @@ const catalogPath = resolve(root, "games/catalog.json");
 const registry = JSON.parse(await readFile(registryPath, "utf8"));
 const catalog = JSON.parse(await readFile(catalogPath, "utf8"));
 const approvedByRepo = new Map(
-  catalog.games.map((game) => [game.repository.split("/").pop(), game]),
+  catalog.games.map((game) => [game.repository.replace("https://github.com/", "").toLowerCase(), game]),
 );
 const headers = {
   accept: "application/vnd.github+json",
@@ -33,22 +33,22 @@ async function githubJson(path) {
   if (!response.ok) throw new Error(`${path}: GitHub ${response.status}`);
   return response.json();
 }
-async function latestStableTag(repo) {
+async function latestStableTag(owner, repo) {
   try {
-    const release = await githubJson(`/repos/${registry.owner}/${repo}/releases/latest`);
+    const release = await githubJson(`/repos/${owner}/${repo}/releases/latest`);
     if (!release.draft && !release.prerelease && semver(release.tag_name)) return release.tag_name;
   } catch (error) {
     if (!String(error.message).includes("GitHub 404")) throw error;
   }
-  const tags = await githubJson(`/repos/${registry.owner}/${repo}/tags?per_page=100`);
+  const tags = await githubJson(`/repos/${owner}/${repo}/tags?per_page=100`);
   return tags.map((item) => item.name).filter(semver).sort((a, b) => {
     const av = semver(a), bv = semver(b);
     for (let i = 0; i < 3; i++) if (av[i] !== bv[i]) return bv[i] - av[i];
     return 0;
   })[0] || null;
 }
-async function manifestAt(repo, tag) {
-  const url = `https://raw.githubusercontent.com/${registry.owner}/${repo}/${tag}/manifest.json`;
+async function manifestAt(owner, repo, tag) {
+  const url = `https://raw.githubusercontent.com/${owner}/${repo}/${tag}/manifest.json`;
   const response = await fetch(url, { headers: { "user-agent": headers["user-agent"] } });
   if (!response.ok) throw new Error(`${repo}@${tag}: manifesto ${response.status}`);
   return response.json();
@@ -56,11 +56,12 @@ async function manifestAt(repo, tag) {
 
 let changed = 0;
 for (const item of registry.games) {
-  const approved = approvedByRepo.get(item.repo);
+  const owner = item.owner || registry.owner;
+  const approved = approvedByRepo.get(`${owner}/${item.repo}`.toLowerCase());
   if (!approved) throw new Error(`${item.repo}: não existe no catálogo aprovado`);
-  const latest = await latestStableTag(item.repo);
-  if (!latest || !newer(latest, item.tag)) continue;
-  const manifest = await manifestAt(item.repo, latest);
+  const latest = await latestStableTag(owner, item.repo);
+  if (!latest || !newer(latest, approved.version)) continue;
+  const manifest = await manifestAt(owner, item.repo, latest);
   const expectedVersion = latest.replace(/^v/, "");
   if (manifest.id !== approved.id)
     throw new Error(`${item.repo}@${latest}: o id do jogo aprovado foi alterado`);

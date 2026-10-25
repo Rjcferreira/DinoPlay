@@ -8,11 +8,12 @@ const registry = JSON.parse(
 );
 
 async function manifestFor(item) {
+  const owner = item.owner || registry.owner;
   const local = resolve(root, "external-repos", item.repo, "manifest.json");
   try {
     return JSON.parse(await readFile(local, "utf8"));
   } catch {
-    const url = `https://raw.githubusercontent.com/${registry.owner}/${item.repo}/${item.tag}/manifest.json`;
+    const url = `https://raw.githubusercontent.com/${owner}/${item.repo}/${item.tag}/manifest.json`;
     const response = await fetch(url, { headers: { "User-Agent": "DinoPlay-Catalog" } });
     if (!response.ok) throw new Error(`${item.repo}: manifesto ${response.status}`);
     return response.json();
@@ -21,14 +22,15 @@ async function manifestFor(item) {
 
 const games = [];
 for (const item of registry.games) {
+  const owner = item.owner || registry.owner;
   const manifest = await manifestFor(item);
   games.push({
     ...manifest,
     runtime: "sandbox",
     size: item.size,
-    repository: `https://github.com/${registry.owner}/${item.repo}`,
-    sourceBase: `https://raw.githubusercontent.com/${registry.owner}/${item.repo}/${item.tag}/`,
-    pageBase: `https://${registry.owner.toLowerCase()}.github.io/${item.repo}/`,
+    repository: `https://github.com/${owner}/${item.repo}`,
+    sourceBase: `https://raw.githubusercontent.com/${owner}/${item.repo}/${item.tag}/`,
+    pageBase: `https://${owner.toLowerCase()}.github.io/${item.repo}/`,
   });
 }
 

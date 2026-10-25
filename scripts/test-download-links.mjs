@@ -13,10 +13,11 @@ if (!platform.includes("sourceAssetUrl(game, asset)"))
   throw new Error("O instalador não usa a origem do repositório selecionado");
 
 for (const item of registry.games) {
+  const owner = item.owner || registry.owner;
   const game = byRepo.get(item.repo);
   if (!game) throw new Error(`${item.repo}: ausente do catálogo`);
-  const expectedRepository = `https://github.com/${registry.owner}/${item.repo}`;
-  const expectedSource = `https://raw.githubusercontent.com/${registry.owner}/${item.repo}/${item.tag}/`;
+  const expectedRepository = `https://github.com/${owner}/${item.repo}`;
+  const expectedSource = `https://raw.githubusercontent.com/${owner}/${item.repo}/${item.tag}/`;
   if (game.repository !== expectedRepository) throw new Error(`${game.id}: repositório cruzado`);
   if (game.sourceBase !== expectedSource) throw new Error(`${game.id}: tag/origem cruzada`);
   const response = await fetch(new URL("manifest.json", expectedSource), {

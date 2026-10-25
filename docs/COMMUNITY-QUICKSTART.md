@@ -5,7 +5,9 @@
 3. Use `DinoPlay.ready()`, `DinoPlay.storage` e, quando autorizado, `DinoPlay.multiplayer`.
 4. Execute `node scripts/validate.mjs` e confirme a validação do GitHub.
 5. Crie uma release estável `vX.Y.Z` e ative GitHub Pages na raiz da branch `main`.
-6. Apenas para a primeira versão, proponha a entrada em `games/registry.json` no repositório `DinoPlay`; o responsável aprova manualmente.
+6. Apenas para a primeira versão, proponha a entrada em `games/registry.json` no repositório `DinoPlay`, incluindo o teu utilizador GitHub no campo `owner`; o responsável aprova manualmente.
 7. Nas versões seguintes, publique apenas uma nova release estável. A plataforma deteta-a em até 15 minutos e publica-a somente se toda a revisão automática passar.
 
 A app descarrega os ficheiros diretamente da release indicada no repositório próprio do jogo. Uma alteração na branch principal nunca chega às crianças sem uma nova release e revisão completa. Uma atualização reprovada mantém a versão anterior disponível.
+
+O jogo nunca é copiado para a conta da DinoPlay: o nome do autor aparece na biblioteca e o botão de instalação usa diretamente o repositório do criador.

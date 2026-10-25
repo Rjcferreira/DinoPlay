@@ -11,4 +11,6 @@ O catálogo da app acrescenta, após revisão:
 - `pageBase`: execução web isolada;
 - `size`: tamanho apresentado aos responsáveis.
 
+O registo guarda `owner`, `repo` e a referência imutável aprovada. Para contribuições comunitárias, `owner` é sempre a conta GitHub do criador; a plataforma não cria nem apresenta uma cópia como se fosse sua.
+
 No Android os recursos são guardados no diretório privado da app. Na Web são descarregados para uma cache isolada por jogo e versão. O jogo comunica com a plataforma exclusivamente por mensagens do SDK, sem acesso ao PIN, amizades ou dados de outros jogos.
