@@ -193,6 +193,30 @@
       "author": "DinoPlay Team"
     },
     {
+      "id": "dinobubbles",
+      "name": "Dino Bubbles",
+      "version": "1.0.0",
+      "runtime": "sandbox",
+      "entry": "games/community/dinobubbles/index.html",
+      "category": "puzzle",
+      "age": "5+",
+      "cover": "games/community/dinobubbles/cover.png",
+      "description": "Aponta, combina três bolhas da mesma cor e explora 30 desafios mágicos.",
+      "size": "5 MB",
+      "multiplayer": false,
+      "offline": true,
+      "assets": [
+        "games/community/dinobubbles/index.html",
+        "games/community/dinobubbles/style.css",
+        "games/community/dinobubbles/game.js",
+        "games/community/dinobubbles/cover.png",
+        "sdk/dinoplay-game-sdk.js"
+      ],
+      "permissions": ["storage"],
+      "license": "MIT",
+      "author": "DinoPlay Team"
+    },
+    {
       "id": "dinojam",
       "name": "DinoJam",
       "version": "2.1.0",
