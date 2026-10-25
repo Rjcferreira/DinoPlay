@@ -1,404 +1,465 @@
 (() => {
   "use strict";
-  const $ = (id) => document.getElementById(id);
-  const colors = [
-    { id: "yellow", hex: "#f3be24", dino: "🦕" },
-    { id: "red", hex: "#ed514b", dino: "🦖" },
-    { id: "blue", hex: "#3c8fe8", dino: "🦎" },
-    { id: "green", hex: "#54b84a", dino: "🦕" },
-    { id: "orange", hex: "#ee8736", dino: "🦖" },
-    { id: "purple", hex: "#9564d8", dino: "🦎" },
-  ];
-  const translations = {
-    "pt-PT": {
-      tagline: "Organiza o trânsito e ajuda os dinos!",
+  const $ = (id) => document.getElementById(id),
+    palette = [
+      { id: "red", hex: "#ef5350" },
+      { id: "yellow", hex: "#f4c430" },
+      { id: "green", hex: "#55b94e" },
+      { id: "blue", hex: "#3f8ce3" },
+      { id: "cyan", hex: "#35c5d4" },
+      { id: "purple", hex: "#9b62d7" },
+      { id: "pink", hex: "#ef72b3" },
+    ],
+    dirs = ["U", "R", "D", "L"],
+    arrows = { U: "↑", R: "→", D: "↓", L: "←" },
+    themes = [
+      { id: "city", icon: "🏙️", name: "Cidade Dino" },
+      { id: "park", icon: "🌳", name: "Parque Jurássico" },
+      { id: "fair", icon: "🎡", name: "Feira Dino" },
+      { id: "zoo", icon: "🦒", name: "Zoo Aventura" },
+      { id: "ocean", icon: "🐚", name: "Mundo Submarino" },
+      { id: "desert", icon: "🏜️", name: "Vale Fóssil" },
+      { id: "snow", icon: "❄️", name: "Montanha Gelada" },
+    ];
+  const base = {
+      tagline: "Liberta os carros e transporta os dinos!",
       play: "JOGAR",
       levels: "ESCOLHER NÍVEL",
       choose: "Escolhe um nível",
       level: "NÍVEL",
-      points: "PONTOS",
-      queue: "PRÓXIMOS DINOS",
-      exit: "SAÍDA",
-      waiting: "ZONA DE ESPERA",
+      queue: "FILA",
       complete: "NÍVEL CONCLUÍDO",
-      win: "Trânsito resolvido!",
+      win: "Parque resolvido!",
       score: "Pontuação",
       next: "PRÓXIMO NÍVEL",
       retry: "JOGAR NOVAMENTE",
-      blocked: "Este veículo ainda está bloqueado",
-      full: "A zona de espera está cheia",
-      hint: "Procura o veículo da cor dos primeiros dinos",
+      blocked: "Esse carro está bloqueado!",
+      full: "Os lugares de espera estão cheios",
+      hint: "Procura um carro livre da cor do primeiro passageiro",
       locked: "Completa o nível anterior",
     },
-    "pt-BR": {
-      tagline: "Organize o trânsito e ajude os dinos!",
-      play: "JOGAR",
-      levels: "ESCOLHER FASE",
-      choose: "Escolha uma fase",
-      level: "FASE",
-      points: "PONTOS",
-      queue: "PRÓXIMOS DINOS",
-      exit: "SAÍDA",
-      waiting: "ÁREA DE ESPERA",
-      complete: "FASE CONCLUÍDA",
-      win: "Trânsito resolvido!",
-      score: "Pontuação",
-      next: "PRÓXIMA FASE",
-      retry: "JOGAR NOVAMENTE",
-      blocked: "Este veículo ainda está bloqueado",
-      full: "A área de espera está cheia",
-      hint: "Procure o veículo da cor dos primeiros dinos",
-      locked: "Complete a fase anterior",
-    },
-    en: {
-      tagline: "Sort the traffic and help the dinos!",
-      play: "PLAY",
-      levels: "CHOOSE LEVEL",
-      choose: "Choose a level",
-      level: "LEVEL",
-      points: "SCORE",
-      queue: "NEXT DINOS",
-      exit: "EXIT",
-      waiting: "WAITING AREA",
-      complete: "LEVEL COMPLETE",
-      win: "Traffic solved!",
-      score: "Score",
-      next: "NEXT LEVEL",
-      retry: "PLAY AGAIN",
-      blocked: "This vehicle is still blocked",
-      full: "The waiting area is full",
-      hint: "Find the vehicle matching the first dinos",
-      locked: "Complete the previous level",
-    },
-    fr: {
-      tagline: "Range le trafic et aide les dinos !",
-      play: "JOUER",
-      levels: "CHOISIR UN NIVEAU",
-      choose: "Choisis un niveau",
-      level: "NIVEAU",
-      points: "POINTS",
-      queue: "PROCHAINS DINOS",
-      exit: "SORTIE",
-      waiting: "ZONE D’ATTENTE",
-      complete: "NIVEAU TERMINÉ",
-      win: "Trafic résolu !",
-      score: "Score",
-      next: "NIVEAU SUIVANT",
-      retry: "REJOUER",
-      blocked: "Ce véhicule est encore bloqué",
-      full: "La zone d’attente est pleine",
-      hint: "Trouve le véhicule de la couleur des premiers dinos",
-      locked: "Termine le niveau précédent",
-    },
-    de: {
-      tagline: "Ordne den Verkehr und hilf den Dinos!",
-      play: "SPIELEN",
-      levels: "LEVEL WÄHLEN",
-      choose: "Wähle ein Level",
-      level: "LEVEL",
-      points: "PUNKTE",
-      queue: "NÄCHSTE DINOS",
-      exit: "AUSGANG",
-      waiting: "WARTEBEREICH",
-      complete: "LEVEL GESCHAFFT",
-      win: "Verkehr gelöst!",
-      score: "Punktzahl",
-      next: "NÄCHSTES LEVEL",
-      retry: "NOCH EINMAL",
-      blocked: "Dieses Fahrzeug ist noch blockiert",
-      full: "Der Wartebereich ist voll",
-      hint: "Finde das Fahrzeug in der Farbe der ersten Dinos",
-      locked: "Schließe das vorige Level ab",
-    },
-    es: {
-      tagline: "¡Ordena el tráfico y ayuda a los dinos!",
-      play: "JUGAR",
-      levels: "ELEGIR NIVEL",
-      choose: "Elige un nivel",
-      level: "NIVEL",
-      points: "PUNTOS",
-      queue: "PRÓXIMOS DINOS",
-      exit: "SALIDA",
-      waiting: "ZONA DE ESPERA",
-      complete: "NIVEL COMPLETADO",
-      win: "¡Tráfico resuelto!",
-      score: "Puntuación",
-      next: "SIGUIENTE NIVEL",
-      retry: "JUGAR DE NUEVO",
-      blocked: "Este vehículo sigue bloqueado",
-      full: "La zona de espera está llena",
-      hint: "Busca el vehículo del color de los primeros dinos",
-      locked: "Completa el nivel anterior",
-    },
-    pl: {
-      tagline: "Uporządkuj ruch i pomóż dinozaurom!",
-      play: "GRAJ",
-      levels: "WYBIERZ POZIOM",
-      choose: "Wybierz poziom",
-      level: "POZIOM",
-      points: "PUNKTY",
-      queue: "NASTĘPNE DINOZAURY",
-      exit: "WYJAZD",
-      waiting: "STREFA OCZEKIWANIA",
-      complete: "POZIOM UKOŃCZONY",
-      win: "Ruch uporządkowany!",
-      score: "Wynik",
-      next: "NASTĘPNY POZIOM",
-      retry: "ZAGRAJ PONOWNIE",
-      blocked: "Ten pojazd jest jeszcze zablokowany",
-      full: "Strefa oczekiwania jest pełna",
-      hint: "Znajdź pojazd w kolorze pierwszych dinozaurów",
-      locked: "Ukończ poprzedni poziom",
-    },
-  };
+    translations = {
+      "pt-PT": base,
+      "pt-BR": {
+        ...base,
+        tagline: "Liberte os carros e transporte os dinos!",
+        levels: "ESCOLHER FASE",
+        choose: "Escolha uma fase",
+        level: "FASE",
+        complete: "FASE CONCLUÍDA",
+        next: "PRÓXIMA FASE",
+      },
+      en: {
+        tagline: "Free the cars and carry the dinos!",
+        play: "PLAY",
+        levels: "CHOOSE LEVEL",
+        choose: "Choose a level",
+        level: "LEVEL",
+        queue: "QUEUE",
+        complete: "LEVEL COMPLETE",
+        win: "Parking solved!",
+        score: "Score",
+        next: "NEXT LEVEL",
+        retry: "PLAY AGAIN",
+        blocked: "That car is blocked!",
+        full: "The waiting spaces are full",
+        hint: "Find a free car matching the first passenger",
+        locked: "Complete the previous level",
+      },
+      fr: {
+        ...base,
+        tagline: "Libère les voitures et transporte les dinos !",
+        play: "JOUER",
+        levels: "CHOISIR UN NIVEAU",
+        choose: "Choisis un niveau",
+        level: "NIVEAU",
+        queue: "FILE",
+        complete: "NIVEAU TERMINÉ",
+        win: "Parking résolu !",
+        score: "Score",
+        next: "NIVEAU SUIVANT",
+        retry: "REJOUER",
+        blocked: "Cette voiture est bloquée !",
+        full: "Les places d’attente sont pleines",
+        hint: "Trouve une voiture libre de la couleur du premier passager",
+        locked: "Termine le niveau précédent",
+      },
+      de: {
+        ...base,
+        tagline: "Befreie die Autos und fahre die Dinos!",
+        play: "SPIELEN",
+        levels: "LEVEL WÄHLEN",
+        choose: "Wähle ein Level",
+        level: "LEVEL",
+        queue: "SCHLANGE",
+        complete: "LEVEL GESCHAFFT",
+        win: "Parkplatz gelöst!",
+        score: "Punktzahl",
+        next: "NÄCHSTES LEVEL",
+        retry: "NOCH EINMAL",
+        blocked: "Dieses Auto ist blockiert!",
+        full: "Die Warteplätze sind voll",
+        hint: "Finde ein freies Auto in der Farbe des ersten Fahrgasts",
+        locked: "Schließe das vorige Level ab",
+      },
+      es: {
+        ...base,
+        tagline: "¡Libera los coches y transporta a los dinos!",
+        play: "JUGAR",
+        levels: "ELEGIR NIVEL",
+        choose: "Elige un nivel",
+        level: "NIVEL",
+        queue: "FILA",
+        complete: "NIVEL COMPLETADO",
+        win: "¡Aparcamiento resuelto!",
+        score: "Puntuación",
+        next: "SIGUIENTE NIVEL",
+        retry: "JUGAR DE NUEVO",
+        blocked: "¡Ese coche está bloqueado!",
+        full: "Los espacios de espera están llenos",
+        hint: "Busca un coche libre del color del primer pasajero",
+        locked: "Completa el nivel anterior",
+      },
+      pl: {
+        ...base,
+        tagline: "Uwolnij auta i przewieź dinozaury!",
+        play: "GRAJ",
+        levels: "WYBIERZ POZIOM",
+        choose: "Wybierz poziom",
+        level: "POZIOM",
+        queue: "KOLEJKA",
+        complete: "POZIOM UKOŃCZONY",
+        win: "Parking rozwiązany!",
+        score: "Wynik",
+        next: "NASTĘPNY POZIOM",
+        retry: "ZAGRAJ PONOWNIE",
+        blocked: "Ten samochód jest zablokowany!",
+        full: "Miejsca oczekiwania są pełne",
+        hint: "Znajdź wolny samochód w kolorze pierwszego pasażera",
+        locked: "Ukończ poprzedni poziom",
+      },
+    };
   let text = translations.en,
     levelIndex = 0,
     unlocked = 1,
     best = {},
-    lanes = [],
-    queue = [],
+    cars = [],
+    passengers = [],
     waiting = [],
     score = 0,
     mistakes = 0,
+    running = false,
     soundOn = true,
     audio = null,
-    running = false;
-
-  function seeded(seed) {
-    let value = seed >>> 0;
-    return () => (value = (value * 1664525 + 1013904223) >>> 0) / 4294967296;
+    boardSize = 6,
+    levelData = null;
+  function rng(seed) {
+    let v = seed >>> 0;
+    return () => (v = (v * 1664525 + 1013904223) >>> 0) / 4294967296;
   }
-  function makeLevel(index) {
-    const random = seeded(8103 + index * 977),
-      colorCount = Math.min(6, 3 + Math.floor(index / 7)),
-      groupCount = Math.min(13, 4 + Math.floor(index / 2)),
-      laneCount = Math.min(5, 3 + Math.floor(index / 10)),
-      available = colors.slice(0, colorCount),
-      groups = [];
-    let previous = -1;
-    for (let i = 0; i < groupCount; i++) {
-      let pick = Math.floor(random() * colorCount);
-      if (pick === previous)
-        pick = (pick + 1 + (i % (colorCount - 1))) % colorCount;
-      previous = pick;
-      groups.push(available[pick]);
+  function pathClear(car, list) {
+    const step = { U: [0, -1], R: [1, 0], D: [0, 1], L: [-1, 0] }[car.dir];
+    let x = car.x + step[0],
+      y = car.y + step[1];
+    while (x >= 0 && x < boardSize && y >= 0 && y < boardSize) {
+      if (list.some((o) => o.id !== car.id && o.x === x && o.y === y))
+        return false;
+      x += step[0];
+      y += step[1];
     }
-    const rows = Array.from({ length: laneCount }, () => []);
-    groups.forEach((color, i) =>
-      rows[i % laneCount].push({ color, type: i % 4 }),
-    );
-    return { groups, rows, bays: index < 8 ? 4 : index < 20 ? 5 : 6 };
+    return true;
   }
-  const levels = Array.from({ length: 30 }, (_, i) => makeLevel(i));
-  function tone(frequency, duration = 0.08) {
+  function generateLevel(index) {
+    const random = rng(9021 + index * 811),
+      size = Math.min(10, 5 + Math.floor(index / 5)),
+      target = Math.min(size * size - 4, 12 + index * 2),
+      colorCount = Math.min(7, 3 + Math.floor(index / 6)),
+      list = [];
+    boardSize = size;
+    const cells = [];
+    for (let y = 0; y < size; y++)
+      for (let x = 0; x < size; x++) cells.push({ x, y });
+    cells.sort(() => random() - 0.5);
+    for (const cell of cells) {
+      if (list.length >= target) break;
+      const distances = [cell.y, size - 1 - cell.x, size - 1 - cell.y, cell.x],
+        min = Math.min(...distances),
+        choices = dirs.filter((_, i) => distances[i] === min),
+        dir = choices[Math.floor(random() * choices.length)],
+        color = palette[Math.floor(random() * colorCount)];
+      list.push({
+        id: `${index}-${list.length}`,
+        x: cell.x,
+        y: cell.y,
+        dir,
+        color,
+        mystery: index > 20 && random() < 0.14,
+      });
+    }
+    const work = list.map((c) => ({ ...c })),
+      order = [];
+    while (work.length) {
+      let free = work.filter((car) => pathClear(car, work));
+      if (!free.length) {
+        const car = work[0],
+          dist = [car.y, size - 1 - car.x, size - 1 - car.y, car.x],
+          i = dist.indexOf(Math.min(...dist));
+        car.dir = dirs[i];
+        free = [car];
+      }
+      const car = free[Math.floor(random() * free.length)];
+      order.push(car);
+      work.splice(
+        work.findIndex((c) => c.id === car.id),
+        1,
+      );
+    }
+    return {
+      size,
+      cars: list,
+      order,
+      bays: index < 8 ? 4 : index < 20 ? 5 : 6,
+      theme: themes[Math.floor(index / 5) % themes.length],
+    };
+  }
+  const levels = Array.from({ length: 30 }, (_, i) => generateLevel(i));
+  function tone(f, d = 0.08) {
     if (!soundOn) return;
     try {
       audio ||= new AudioContext();
-      const oscillator = audio.createOscillator(),
-        gain = audio.createGain();
-      oscillator.frequency.value = frequency;
-      gain.gain.setValueAtTime(0.05, audio.currentTime);
-      gain.gain.exponentialRampToValueAtTime(
-        0.001,
-        audio.currentTime + duration,
-      );
-      oscillator.connect(gain).connect(audio.destination);
-      oscillator.start();
-      oscillator.stop(audio.currentTime + duration);
+      const o = audio.createOscillator(),
+        g = audio.createGain();
+      o.frequency.value = f;
+      g.gain.setValueAtTime(0.05, audio.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, audio.currentTime + d);
+      o.connect(g).connect(audio.destination);
+      o.start();
+      o.stop(audio.currentTime + d);
     } catch {}
   }
   function show(id) {
     document
       .querySelectorAll(".screen")
-      .forEach((screen) => screen.classList.remove("open"));
+      .forEach((s) => s.classList.remove("open"));
     if (id) $(id).classList.add("open");
   }
-  function toast(message) {
-    $("toast").textContent = message;
+  function toast(m) {
+    $("toast").textContent = m;
     $("toast").classList.add("show");
     clearTimeout(toast.timer);
-    toast.timer = setTimeout(() => $("toast").classList.remove("show"), 1500);
+    toast.timer = setTimeout(() => $("toast").classList.remove("show"), 1400);
   }
   function translate() {
-    $("tagline").textContent = text.tagline;
-    $("play").textContent = text.play;
-    $("levelsButton").textContent = text.levels;
-    $("levelsTitle").textContent = text.choose;
-    $("levelWord").textContent = text.level;
-    $("scoreWord").textContent = text.points;
-    $("queueLabel").textContent = text.queue;
-    $("exitLabel").textContent = text.exit;
-    $("waitingLabel").textContent = text.waiting;
-    $("resultEyebrow").textContent = text.complete;
-    $("resultTitle").textContent = text.win;
-    $("finalScoreLabel").textContent = text.score;
-    $("next").textContent = text.next;
-    $("retry").textContent = text.retry;
-    $("resultLevels").textContent = text.levels;
+    for (const [id, key] of [
+      ["tagline", "tagline"],
+      ["play", "play"],
+      ["levelsButton", "levels"],
+      ["levelsTitle", "choose"],
+      ["levelWord", "level"],
+      ["queueWord", "queue"],
+      ["resultEyebrow", "complete"],
+      ["resultTitle", "win"],
+      ["finalScoreLabel", "score"],
+      ["next", "next"],
+      ["retry", "retry"],
+      ["resultLevels", "levels"],
+    ])
+      $(id).textContent = text[key];
   }
-  function buildLevelGrid() {
+  function buildGrid() {
     const grid = $("levelGrid");
     grid.innerHTML = "";
-    levels.forEach((_, index) => {
-      const button = document.createElement("button"),
-        stars = best[index]?.stars || 0;
-      button.className = `level-tile ${index < unlocked ? "done" : "locked"}`;
-      button.innerHTML = `${index + 1}<small>${"★".repeat(stars)}${"☆".repeat(3 - stars)}</small>`;
-      button.onclick = () => {
-        if (index >= unlocked) return toast(text.locked);
-        levelIndex = index;
+    levels.forEach((_, i) => {
+      const b = document.createElement("button"),
+        stars = best[i]?.stars || 0;
+      b.className = `level-tile ${i < unlocked ? "done" : "locked"}`;
+      b.innerHTML = `${i + 1}<small>${"★".repeat(stars)}${"☆".repeat(3 - stars)}</small>`;
+      b.onclick = () => {
+        if (i >= unlocked) return toast(text.locked);
+        levelIndex = i;
         loadLevel();
       };
-      grid.appendChild(button);
+      grid.appendChild(b);
     });
   }
   function loadLevel() {
-    const level = levels[levelIndex];
-    lanes = level.rows.map((row) => row.map((vehicle) => ({ ...vehicle })));
-    queue = [...level.groups];
+    levelData = levels[levelIndex];
+    boardSize = levelData.size;
+    cars = levelData.cars.map((c) => ({ ...c }));
+    passengers = levelData.order.flatMap((car) => [
+      car.color,
+      car.color,
+      car.color,
+    ]);
     waiting = [];
-    score = 1000 + levelIndex * 100;
+    score = 1000 + levelIndex * 120;
     mistakes = 0;
     running = true;
     document.body.classList.add("playing");
     $("levelNumber").textContent = levelIndex + 1;
+    $("world").className = `world theme-${levelData.theme.id}`;
+    $("sceneIcon").textContent = levelData.theme.icon;
+    $("sceneName").textContent = levelData.theme.name;
     show(null);
     render();
     tone(440);
   }
-  function vehicleName(type) {
-    return ["CARRO", "BUS", "VAN", "TRUCK"][type] || "CARRO";
-  }
   function render() {
-    $("score").textContent = score;
-    $("remaining").textContent = queue.length;
-    const queueBox = $("passengerQueue");
-    queueBox.innerHTML = "";
-    queue.slice(0, 6).forEach((color, index) => {
-      const group = document.createElement("div");
-      group.className = `passenger-group ${index > 3 ? "hidden-group" : ""}`;
-      group.style.setProperty("--group-color", color.hex);
-      group.textContent = color.dino.repeat(3);
-      queueBox.appendChild(group);
+    renderPassengers();
+    renderSlots();
+    renderCars();
+    $("remaining").textContent = passengers.length;
+  }
+  function renderPassengers() {
+    const line = $("passengerLine");
+    line.innerHTML = "";
+    passengers.slice(0, 28).forEach((color, i) => {
+      const p = document.createElement("span");
+      p.className = `passenger ${i === 0 ? "next" : ""}`;
+      p.style.setProperty("--person", color.hex);
+      line.appendChild(p);
     });
-    const parking = $("parking");
-    parking.innerHTML = "";
-    lanes.forEach((lane, laneIndex) => {
-      const laneBox = document.createElement("div");
-      laneBox.className = "lane";
-      lane.forEach((vehicle, vehicleIndex) => {
-        const button = document.createElement("button");
-        button.className = `vehicle ${vehicleIndex ? "blocked" : ""}`;
-        button.style.setProperty("--car", vehicle.color.hex);
-        button.innerHTML = `<span>${vehicleName(vehicle.type)}</span>`;
-        button.setAttribute(
-          "aria-label",
-          `${vehicleName(vehicle.type)} ${vehicle.color.id}`,
-        );
-        button.onclick = () => selectVehicle(laneIndex, vehicleIndex);
-        laneBox.appendChild(button);
-      });
-      parking.appendChild(laneBox);
-    });
-    const waitingBox = $("waiting"),
-      bays = levels[levelIndex].bays;
-    waitingBox.innerHTML = "";
-    for (let i = 0; i < bays; i++) {
-      const bay = document.createElement("div"),
-        vehicle = waiting[i];
-      bay.className = `bay ${vehicle ? "filled" : ""}`;
-      if (vehicle) {
-        bay.style.setProperty("--car", vehicle.color.hex);
-        bay.textContent = "🚐";
-      } else bay.textContent = "+";
-      waitingBox.appendChild(bay);
+    if (passengers.length > 28) {
+      const p = document.createElement("span");
+      p.className = "passenger more";
+      p.textContent = `+${passengers.length - 28}`;
+      line.appendChild(p);
     }
   }
-  function selectVehicle(laneIndex, vehicleIndex) {
+  function renderSlots() {
+    const box = $("boardingSlots");
+    box.innerHTML = "";
+    for (let i = 0; i < levelData.bays; i++) {
+      const slot = document.createElement("div");
+      slot.className = "slot";
+      if (waiting[i]) {
+        const mini = document.createElement("span");
+        mini.className = "mini-car";
+        mini.style.setProperty("--car", waiting[i].color.hex);
+        slot.appendChild(mini);
+      }
+      box.appendChild(slot);
+    }
+  }
+  function renderCars() {
+    const board = $("parkingBoard");
+    board.innerHTML = "";
+    cars.forEach((car) => {
+      const b = document.createElement("button"),
+        horizontal = car.dir === "L" || car.dir === "R",
+        w = 100 / boardSize;
+      b.className = `car ${horizontal ? "horizontal" : ""} ${car.mystery ? "mystery" : ""}`;
+      b.dataset.id = car.id;
+      b.style.cssText += `--car:${car.color.hex};--x:${car.x * w + w * 0.21}%;--y:${car.y * w + w * 0.03}%;--cw:${w * 0.58}%;--ch:${w * 0.94}%;`;
+      if (horizontal) b.style.rotate = "90deg";
+      b.innerHTML = `<span class="car-arrow">${arrows[car.dir]}</span>`;
+      b.onclick = () => selectCar(car.id);
+      board.appendChild(b);
+    });
+  }
+  function selectCar(id) {
     if (!running) return;
-    if (vehicleIndex !== 0) {
+    const car = cars.find((c) => c.id === id),
+      el = document.querySelector(`[data-id="${id}"]`);
+    if (!car) return;
+    if (!pathClear(car, cars)) {
       mistakes++;
-      score = Math.max(0, score - 25);
+      score = Math.max(0, score - 20);
+      el?.classList.add("blocked-hit");
+      setTimeout(() => el?.classList.remove("blocked-hit"), 750);
       toast(text.blocked);
-      tone(150, 0.12);
+      tone(140, 0.12);
       return;
     }
-    const vehicle = lanes[laneIndex][0],
-      direct = queue[0]?.id === vehicle.color.id;
-    if (!direct && waiting.length >= levels[levelIndex].bays) {
+    const matches = passengers[0]?.id === car.color.id;
+    if (!matches && waiting.length >= levelData.bays) {
       mistakes++;
-      score = Math.max(0, score - 50);
+      score = Math.max(0, score - 40);
       toast(text.full);
-      tone(130, 0.14);
+      tone(120, 0.15);
       return;
     }
-    lanes[laneIndex].shift();
-    if (direct) {
-      queue.shift();
-      score += 250;
-      tone(660);
+    const exit = { U: [0, -130], R: [130, 0], D: [0, 130], L: [-130, 0] }[
+      car.dir
+    ];
+    el?.style.setProperty("--exit-x", `${exit[0]}vw`);
+    el?.style.setProperty("--exit-y", `${exit[1]}vh`);
+    el?.classList.add("leaving");
+    cars.splice(cars.indexOf(car), 1);
+    setTimeout(() => {
+      if (matches) boardCar(car);
+      else {
+        waiting.push(car);
+        score = Math.max(0, score - 10);
+      }
       processWaiting();
-    } else {
-      waiting.push(vehicle);
-      score = Math.max(0, score - 15);
-      tone(310);
+      render();
+      if (!passengers.length) finish();
+    }, 300);
+    tone(matches ? 640 : 300);
+  }
+  function boardCar(car) {
+    let count = 0;
+    while (
+      passengers.length &&
+      passengers[0].id === car.color.id &&
+      count < 3
+    ) {
+      passengers.shift();
+      count++;
     }
-    render();
-    if (!queue.length) finish();
-    else checkStuck();
+    score += count * 100;
   }
   function processWaiting() {
     let moved = true;
-    while (moved && queue.length) {
+    while (moved && passengers.length) {
       moved = false;
-      const index = waiting.findIndex(
-        (vehicle) => vehicle.color.id === queue[0].id,
-      );
-      if (index >= 0) {
-        waiting.splice(index, 1);
-        queue.shift();
-        score += 200;
+      const i = waiting.findIndex((c) => c.color.id === passengers[0].id);
+      if (i >= 0) {
+        boardCar(waiting.splice(i, 1)[0]);
         moved = true;
       }
     }
   }
-  function checkStuck() {
-    if (waiting.length < levels[levelIndex].bays) return;
-    const canMove = lanes.some((lane) => lane[0]?.color.id === queue[0]?.id);
-    if (!canMove) setTimeout(() => toast(text.hint), 300);
-  }
   async function finish() {
     running = false;
-    const stars = mistakes === 0 ? 3 : mistakes < 3 ? 2 : 1;
+    const stars = mistakes === 0 ? 3 : mistakes < 4 ? 2 : 1;
     score += stars * 500;
-    const previous = best[levelIndex];
-    if (!previous || score > previous.score)
-      best[levelIndex] = {
-        score,
-        stars: Math.max(stars, previous?.stars || 0),
-      };
+    const old = best[levelIndex];
+    if (!old || score > old.score)
+      best[levelIndex] = { score, stars: Math.max(stars, old?.stars || 0) };
     unlocked = Math.max(unlocked, Math.min(levels.length, levelIndex + 2));
     await save();
     $("stars").textContent = "★".repeat(stars) + "☆".repeat(3 - stars);
     $("finalScore").textContent = score;
-    $("next").style.display = levelIndex < levels.length - 1 ? "block" : "none";
+    $("next").style.display = levelIndex < 29 ? "block" : "none";
     setTimeout(() => show("result"), 450);
-    tone(784, 0.18);
+    tone(784, 0.2);
   }
   async function save() {
     const value = { unlocked, best };
     try {
-      await DinoPlay.storage.set("dinojam-progress", value);
+      await DinoPlay.storage.set("dinojam-progress-v2", value);
     } catch {
-      localStorage.setItem("dinojam-progress", JSON.stringify(value));
+      localStorage.setItem("dinojam-progress-v2", JSON.stringify(value));
     }
   }
   function openLevels() {
-    buildLevelGrid();
+    buildGrid();
     show("levels");
   }
+  function hint() {
+    const wanted = passengers[0]?.id,
+      car = cars.find((c) => c.color.id === wanted && pathClear(c, cars));
+    if (car) {
+      const el = document.querySelector(`[data-id="${car.id}"]`);
+      el?.classList.add("hint-car");
+      setTimeout(() => el?.classList.remove("hint-car"), 3000);
+    }
+    toast(text.hint);
+  }
   $("play").onclick = () => {
-    levelIndex = Math.min(unlocked - 1, levels.length - 1);
+    levelIndex = Math.min(unlocked - 1, 29);
     loadLevel();
   };
   $("levelsButton").onclick = openLevels;
@@ -409,48 +470,32 @@
     show("home");
   };
   $("restart").onclick = loadLevel;
-  $("hint").onclick = () => {
-    toast(text.hint);
-    const wanted = queue[0]?.id;
-    document
-      .querySelectorAll(".vehicle:not(.blocked)")
-      .forEach((vehicle, i) => {
-        if (lanes[i]?.[0]?.color.id === wanted)
-          vehicle.animate(
-            [
-              { transform: "scale(1)" },
-              { transform: "scale(1.1)" },
-              { transform: "scale(1)" },
-            ],
-            { duration: 650, iterations: 2 },
-          );
-      });
-  };
+  $("hint").onclick = hint;
+  $("settings").onclick = hint;
   $("sound").onclick = () => {
     soundOn = !soundOn;
     $("sound").textContent = soundOn ? "🔊" : "🔇";
     tone(440);
   };
   $("next").onclick = () => {
-    levelIndex = Math.min(levels.length - 1, levelIndex + 1);
+    levelIndex = Math.min(29, levelIndex + 1);
     loadLevel();
   };
   $("retry").onclick = loadLevel;
   $("resultLevels").onclick = openLevels;
-
   async function start() {
     let language = "en";
     try {
-      const context = await DinoPlay.ready();
-      language = context.language || "en";
-      const saved = await DinoPlay.storage.get("dinojam-progress");
+      const ctx = await DinoPlay.ready();
+      language = ctx.language || "en";
+      const saved = await DinoPlay.storage.get("dinojam-progress-v2");
       if (saved) {
         unlocked = Math.max(1, Number(saved.unlocked) || 1);
         best = saved.best || {};
       }
     } catch {
       try {
-        const saved = JSON.parse(localStorage.getItem("dinojam-progress"));
+        const saved = JSON.parse(localStorage.getItem("dinojam-progress-v2"));
         if (saved) {
           unlocked = Math.max(1, Number(saved.unlocked) || 1);
           best = saved.best || {};
@@ -459,7 +504,7 @@
     }
     text = translations[language] || translations.en;
     translate();
-    buildLevelGrid();
+    buildGrid();
   }
   start();
 })();
