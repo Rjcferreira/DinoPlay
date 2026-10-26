@@ -343,11 +343,11 @@
           `<div class="dp-extra"><span>${safeText(game.icon)}</span><div><b>${safeText(extra.name)}</b><small>${safeText(game.name)} · ${safeText(extra.description)}</small></div><button type="button" disabled>${safeText(tr("INDISPONÍVEL"))}</button></div>`,
       ),
     );
-    return `<div class="dp-extras-info"><b>🛍️ ${safeText(tr("Extras dos jogos"))}</b><p>Compras só podem ser apresentadas e confirmadas nesta Área dos Pais. Os jogos nunca recebem dados de pagamento.</p></div><div class="dp-extras-list">${rows.length ? rows.join("") : `<div class="dp-no-extras">${safeText(tr("Ainda não existem extras disponíveis."))}</div>`}</div><div class="dp-parent-note">🔒 Os pagamentos permanecem desativados até existir validação segura no servidor. Nenhum desbloqueio pago é guardado apenas neste dispositivo.</div>`;
+    return `<div class="dp-extras-info"><b><span aria-hidden="true">🛍️</span> ${safeText(tr("Extras dos jogos"))}</b><p>${safeText(tr("Compras só podem ser apresentadas e confirmadas nesta Área dos Pais. Os jogos nunca recebem dados de pagamento."))}</p></div><div class="dp-extras-list">${rows.length ? rows.join("") : `<div class="dp-no-extras">${safeText(tr("Ainda não existem extras disponíveis."))}</div>`}</div><div class="dp-parent-note"><span aria-hidden="true">🔒</span> ${safeText(tr("Os pagamentos permanecem desativados até existir validação segura no servidor. Nenhum desbloqueio pago é guardado apenas neste dispositivo."))}</div>`;
   }
   function parentPrivacyMarkup() {
     const hasProfile = Boolean(window.DinoPlayMultiplayer?.hasIdentity());
-    return `<div class="dp-data-card about"><b>🦕 Quem somos</b><p>O DinoPlay nasceu de uma necessidade real de um grupo privado de pais: criar um espaço seguro, divertido e positivo para os nossos filhos.</p><a href="./about.html" target="_blank" rel="noopener">CONHECER A NOSSA HISTÓRIA</a></div><div class="dp-data-card community"><b>💬 Comunidade DinoPlay</b><p>Um espaço no Discord destinado exclusivamente a pais e programadores. Não é uma área para crianças.</p><a href="https://discord.gg/f22q9cQYNp" target="_blank" rel="noopener noreferrer">ENTRAR NA COMUNIDADE</a></div><div class="dp-data-card"><b>🛡️ Dados e privacidade</b><p>O progresso dos jogos e o PIN parental ficam neste dispositivo. Se o multiplayer for usado, o serviço guarda um identificador aleatório, o apelido e as amizades autorizadas.</p><a href="./privacy.html" target="_blank" rel="noopener">LER POLÍTICA DE PRIVACIDADE</a></div><div class="dp-data-card danger"><b>Apagar perfil multiplayer</b><p>Remove do servidor o apelido, todas as amizades e a identificação multiplayer deste dispositivo. O progresso dos jogos e o PIN parental não são apagados.</p><button id="deleteMultiplayerProfile" type="button" ${hasProfile ? "" : "disabled"}>${profileDeleteConfirm ? "CONFIRMAR ELIMINAÇÃO" : hasProfile ? "APAGAR PERFIL MULTIPLAYER" : "NÃO EXISTE PERFIL MULTIPLAYER"}</button><small id="profileDeleteMessage" role="status"></small></div>`;
+    return `<div class="dp-data-card about"><b><span aria-hidden="true">🦕</span> ${safeText(tr("Quem somos"))}</b><p>${safeText(tr("O DinoPlay nasceu de uma necessidade real de um grupo privado de pais: criar um espaço seguro, divertido e positivo para os nossos filhos."))}</p><a href="./about.html" target="_blank" rel="noopener">${safeText(tr("CONHECER A NOSSA HISTÓRIA"))}</a></div><div class="dp-data-card community"><b><span aria-hidden="true">💬</span> ${safeText(tr("Comunidade DinoPlay"))}</b><p>${safeText(tr("Um espaço no Discord destinado exclusivamente a pais e programadores. Não é uma área para crianças."))}</p><a href="https://discord.gg/f22q9cQYNp" target="_blank" rel="noopener noreferrer">${safeText(tr("ENTRAR NA COMUNIDADE"))}</a></div><div class="dp-data-card"><b><span aria-hidden="true">🛡️</span> ${safeText(tr("Dados e privacidade"))}</b><p>${safeText(tr("O progresso dos jogos e o PIN parental ficam neste dispositivo. Se o multiplayer for usado, o serviço guarda um identificador aleatório, o apelido e as amizades autorizadas."))}</p><a href="./privacy.html" target="_blank" rel="noopener">${safeText(tr("LER POLÍTICA DE PRIVACIDADE"))}</a></div><div class="dp-data-card danger"><b>${safeText(tr("Apagar perfil multiplayer"))}</b><p>${safeText(tr("Remove do servidor o apelido, todas as amizades e a identificação multiplayer deste dispositivo. O progresso dos jogos e o PIN parental não são apagados."))}</p><button id="deleteMultiplayerProfile" type="button" ${hasProfile ? "" : "disabled"}>${safeText(tr(profileDeleteConfirm ? "CONFIRMAR ELIMINAÇÃO" : hasProfile ? "APAGAR PERFIL MULTIPLAYER" : "NÃO EXISTE PERFIL MULTIPLAYER"))}</button><small id="profileDeleteMessage" role="status"></small></div>`;
   }
   function parentReportsMarkup() {
     const options = Object.entries(catalog)
@@ -356,13 +356,15 @@
           `<option value="${safeText(id)}">${safeText(tr(game.name))} · v${safeText(game.version)}</option>`,
       )
       .join("");
-    return `<div class="dp-report-info"><b>🚩 Denunciar um jogo</b><p>Esta área é exclusiva para responsáveis. O relatório não envia o nome da criança, contactos, identificadores do dispositivo nem o progresso do jogo.</p></div><form id="gameReportForm" class="dp-report-form"><label>Jogo<select id="reportGame" required><option value="">Escolher jogo</option>${options}</select></label><label>Tipo de problema<select id="reportKind" required><option value="bug">Erro ou bloqueio</option><option value="inappropriate-content">Conteúdo inadequado</option><option value="privacy-security">Privacidade ou segurança</option><option value="accessibility">Acessibilidade</option><option value="other">Outro</option></select></label><label>O que aconteceu?<textarea id="reportDescription" minlength="10" maxlength="1500" required placeholder="Descreve o problema sem indicar nomes, contactos ou outros dados da criança."></textarea></label><label class="dp-report-confirm"><input id="reportPrivacy" type="checkbox" required><span>Confirmo que não incluí dados pessoais de uma criança.</span></label><button id="sendGameReport" type="submit">ENVIAR DENÚNCIA</button><small id="reportMessage" role="status"></small></form>`;
+    return `<div class="dp-report-info"><b><span aria-hidden="true">🚩</span> ${safeText(tr("Denunciar um jogo"))}</b><p>${safeText(tr("Esta área é exclusiva para responsáveis. O relatório não envia o nome da criança, contactos, identificadores do dispositivo nem o progresso do jogo."))}</p></div><form id="gameReportForm" class="dp-report-form"><label>${safeText(tr("Jogo"))}<select id="reportGame" required><option value="">${safeText(tr("Escolher jogo"))}</option>${options}</select></label><label>${safeText(tr("Tipo de problema"))}<select id="reportKind" required><option value="bug">${safeText(tr("Erro ou bloqueio"))}</option><option value="inappropriate-content">${safeText(tr("Conteúdo inadequado"))}</option><option value="privacy-security">${safeText(tr("Privacidade ou segurança"))}</option><option value="accessibility">${safeText(tr("Acessibilidade"))}</option><option value="other">${safeText(tr("Outro"))}</option></select></label><label>${safeText(tr("O que aconteceu?"))}<textarea id="reportDescription" minlength="10" maxlength="1500" required placeholder="${safeText(tr("Descreve o problema sem indicar nomes, contactos ou outros dados da criança."))}"></textarea></label><label class="dp-report-confirm"><input id="reportPrivacy" type="checkbox" required><span>${safeText(tr("Confirmo que não incluí dados pessoais de uma criança."))}</span></label><button id="sendGameReport" type="submit">${safeText(tr("ENVIAR DENÚNCIA"))}</button><small id="reportMessage" role="status"></small></form>`;
   }
   function applyParentPage(view) {
     const title = view.querySelector(":scope > .dp-section > .dp-title");
     if (!title) return;
     const nav = document.createElement("div");
     nav.className = "dp-parent-pages";
+    nav.setAttribute("role", "tablist");
+    nav.setAttribute("aria-label", tr("Páginas da Área dos Pais"));
     nav.innerHTML = [
       ["security", "🔐", "Segurança"],
       ["friends", "👨‍👩‍👧", "Amigos"],
@@ -373,10 +375,19 @@
     ]
       .map(
         ([id, icon, label]) =>
-          `<button type="button" data-parent-page="${id}" class="${parentPage === id ? "active" : ""}">${icon} ${safeText(tr(label))}</button>`,
+          `<button type="button" role="tab" aria-selected="${parentPage === id}" data-parent-page="${id}" class="${parentPage === id ? "active" : ""}">${icon} ${safeText(tr(label))}</button>`,
       )
       .join("");
     title.after(nav);
+    const pageInfo = {
+      security: ["🔐", "Segurança parental", "Controla o acesso e as ligações online."],
+      friends: ["👨‍👩‍👧", "Amigos autorizados", "Só os responsáveis podem criar ou remover amizades."],
+      games: ["🎮", "Gestão dos jogos", "Consulta e remove jogos instalados sem perder o progresso."],
+      extras: ["🛍️", "Extras dos jogos", "Qualquer compra futura será sempre apresentada apenas aos responsáveis."],
+      reports: ["🚩", "Denunciar um jogo", "Envia um alerta privado sem dados pessoais da criança."],
+      privacy: ["🛡️", "Privacidade e comunidade", "Consulta a nossa missão, comunidade e política de privacidade."],
+    }[parentPage];
+    nav.insertAdjacentHTML("afterend", `<div class="dp-parent-intro"><span>${pageInfo[0]}</span><div><b>${safeText(tr(pageInfo[1]))}</b><small>${safeText(tr(pageInfo[2]))}</small></div></div>`);
     const section = title.parentElement;
     const groups = {
       security: section.querySelectorAll(
@@ -394,16 +405,17 @@
         node.classList.toggle("hidden", parentPage !== id),
       ),
     );
+    const intro = nav.nextElementSibling;
     if (parentPage === "extras")
-      nav.insertAdjacentHTML("afterend", parentExtrasMarkup());
+      intro.insertAdjacentHTML("afterend", parentExtrasMarkup());
     if (parentPage === "reports")
-      nav.insertAdjacentHTML("afterend", parentReportsMarkup());
+      intro.insertAdjacentHTML("afterend", parentReportsMarkup());
     if (parentPage === "privacy")
-      nav.insertAdjacentHTML("afterend", parentPrivacyMarkup());
+      intro.insertAdjacentHTML("afterend", parentPrivacyMarkup());
     if (parentPage === "friends" && !platform.onlineMultiplayerEnabled)
-      nav.insertAdjacentHTML(
+      intro.insertAdjacentHTML(
         "afterend",
-        '<div class="dp-parent-note">🔒 Ativa primeiro o multiplayer na página Segurança.</div>',
+        `<div class="dp-parent-note"><span aria-hidden="true">🔒</span> ${safeText(tr("Ativa primeiro o multiplayer na página Segurança."))}</div>`,
       );
   }
   function render() {
@@ -422,7 +434,7 @@
       view.innerHTML = `<section class="dp-section"><div class="dp-title"><div><small>ESCOLHIDOS PARA CRIANÇAS</small><h2>Biblioteca</h2></div><span>${platform.installed.length}/${Object.keys(catalog).length} ${safeText(tr("instalados"))}</span></div>${searchMarkup()}<div class="dp-chips" role="group" aria-label="${safeText(tr("Categorias de jogos"))}">${categoryButtons()}</div><div class="dp-category-title"><b>${categories[category].icon} ${label}</b><small id="libraryResultCount">${ids.length} ${safeText(tr(ids.length === 1 ? "jogo" : "jogos"))}</small></div><div class="dp-grid dp-library-grid">${ids.map((id) => card(id, "library")).join("")}</div><div id="gameSearchEmpty" class="dp-search-empty hidden"><span>🦕🔍</span><b>Nenhum jogo encontrado</b><small>Experimenta outro nome ou escolhe outra categoria.</small></div></section>`;
     } else if (!parentOpen) view.innerHTML = parentLockMarkup();
     else
-      view.innerHTML = `<section class="dp-section"><div class="dp-title"><div><small>GESTÃO SEGURA</small><h2>Área dos Pais</h2></div><button id="parentLock">Bloquear</button></div>${parentSecurityMarkup()}<div class="dp-parent-setting"><span>🌍</span><div><b>Multiplayer pela Internet</b><small>Permite jogar apenas com amigos aprovados pelos dois responsáveis.</small><em>${platform.onlineMultiplayerEnabled ? "Autorizado pelo responsável" : "Bloqueado por predefinição"}</em></div><button type="button" data-online-toggle class="${platform.onlineMultiplayerEnabled ? "on" : "off"}" aria-pressed="${platform.onlineMultiplayerEnabled}">${platform.onlineMultiplayerEnabled ? "ATIVO" : "BLOQUEADO"}</button></div>${platform.onlineMultiplayerEnabled ? `<div class="dp-child-profile"><span>🧒</span><div><b>Perfil da criança</b><small>Usa apenas o primeiro nome ou um apelido. Será visível somente aos amigos autorizados.</small></div><input id="childNicknameInput" maxlength="16" value="${childNickname().replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;")}" placeholder="Nome ou apelido"><button id="childNicknameSave">GUARDAR</button></div><div class="dp-friends"><div class="dp-friends-head"><div><b>Amigos autorizados</b><small>Os códigos só funcionam aqui, uma vez e durante 2 minutos.</small></div><button id="friendCodeCreate">＋ GERAR CÓDIGO</button></div><div id="friendCodeResult" class="hidden"></div><div class="dp-friend-accept"><input id="friendCodeInput" maxlength="11" autocapitalize="none" autocomplete="off" spellcheck="false" placeholder="Código do outro responsável"><button id="friendCodeAccept">ACEITAR AMIZADE</button></div><small id="friendMessage"></small><div class="dp-manage dp-friend-list">${friendRows()}</div></div>` : ""}<div class="dp-parent-note">💾 Remover um jogo liberta os ficheiros offline, mas mantém todo o progresso para uma futura reinstalação.</div><div class="dp-manage">${Object.keys(
+      view.innerHTML = `<section class="dp-section"><div class="dp-title"><div><small>GESTÃO SEGURA</small><h2>Área dos Pais</h2></div><button id="parentLock">Bloquear</button></div>${parentSecurityMarkup()}<div class="dp-parent-setting"><span>🌍</span><div><b>Multiplayer pela Internet</b><small>Permite jogar apenas com amigos aprovados pelos dois responsáveis.</small><em>${platform.onlineMultiplayerEnabled ? "Autorizado pelo responsável" : "Bloqueado por predefinição"}</em></div><button type="button" data-online-toggle class="${platform.onlineMultiplayerEnabled ? "on" : "off"}" aria-pressed="${platform.onlineMultiplayerEnabled}">${platform.onlineMultiplayerEnabled ? "ATIVO" : "BLOQUEADO"}</button></div>${platform.onlineMultiplayerEnabled ? `<div class="dp-child-profile"><span>🧒</span><div><b>Perfil da criança</b><small>Usa apenas o primeiro nome ou um apelido. Será visível somente aos amigos autorizados.</small></div><input id="childNicknameInput" maxlength="16" value="${childNickname().replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;")}" placeholder="Nome ou apelido"><button id="childNicknameSave">GUARDAR</button></div><div class="dp-friends"><div class="dp-friends-head"><div><b>Amigos autorizados</b><small>Os códigos só funcionam aqui, uma vez e durante 2 minutos.</small></div><button id="friendCodeCreate">＋ GERAR CÓDIGO</button></div><div id="friendCodeResult" class="hidden"></div><div class="dp-friend-accept"><input id="friendCodeInput" maxlength="11" autocapitalize="none" autocomplete="off" spellcheck="false" placeholder="Código do outro responsável"><button id="friendCodeAccept">ACEITAR AMIZADE</button></div><small id="friendMessage"></small><div class="dp-manage dp-friend-list">${friendRows()}</div></div>` : ""}<div class="dp-parent-note"><span aria-hidden="true">💾</span> ${safeText(tr("Remover um jogo liberta os ficheiros offline, mas mantém todo o progresso para uma futura reinstalação."))}</div><div class="dp-manage">${Object.keys(
         catalog,
       )
         .map((id) => {

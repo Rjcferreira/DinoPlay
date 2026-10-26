@@ -1,5 +1,5 @@
 (() => {
-  const APP_VERSION = "5.72";
+  const APP_VERSION = "5.73";
   let registration = null;
   let reloading = false;
   window.DINOPLAY_VERSION = APP_VERSION;
