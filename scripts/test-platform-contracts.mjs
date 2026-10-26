@@ -52,6 +52,16 @@ requireText(
   "interface usa a versão interna atual",
 );
 requireText(
+  platform,
+  "game.catalogCover",
+  "capas da biblioteca servidas pela própria aplicação",
+);
+requireText(
+  platform,
+  "[A-Za-z0-9-]{1,39}",
+  "repositórios comunitários mantêm o proprietário original",
+);
+requireText(
   index,
   `DinoPlay v${releaseVersion}`,
   "versão inicial igual à versão publicada",

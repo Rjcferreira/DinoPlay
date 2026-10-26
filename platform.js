@@ -157,7 +157,7 @@
       return (
         url.protocol === "https:" &&
         url.hostname === "raw.githubusercontent.com" &&
-        /^\/Rjcferreira\/dinoplay-[a-z0-9-]+\/v\d+\.\d+\.\d+\/$/.test(
+        /^\/[A-Za-z0-9-]{1,39}\/[A-Za-z0-9._-]{3,100}\/(?:v\d+\.\d+\.\d+|[a-f0-9]{40})\/$/.test(
           url.pathname,
         )
       );
@@ -207,15 +207,16 @@
       !game ||
       !/^[-a-z0-9]{3,32}$/.test(game.id) ||
       !safeLocalPath(game.cover) ||
+      !safeLocalPath(game.catalogCover) ||
       !Array.isArray(game.assets) ||
       !game.assets.every(safeLocalPath) ||
       game.runtime !== "sandbox" ||
       !safeSourceBase(game.sourceBase) ||
       typeof game.repository !== "string" ||
-      !/^https:\/\/github\.com\/Rjcferreira\/dinoplay-[a-z0-9-]+$/.test(
+      !/^https:\/\/github\.com\/[A-Za-z0-9-]{1,39}\/[A-Za-z0-9._-]{3,100}$/.test(
         game.repository,
       ) ||
-      !/^https:\/\/rjcferreira\.github\.io\/dinoplay-[a-z0-9-]+\/$/.test(
+      !/^https:\/\/[a-z0-9-]{1,39}\.github\.io\/[A-Za-z0-9._-]{3,100}\/$/.test(
         game.pageBase,
       ) ||
       !categories[game.category]
@@ -228,7 +229,7 @@
       ...game,
       icon: game.icon || style.icon,
       tone: game.tone || style.tone,
-      cover: sourceAssetUrl(game, game.cover),
+      cover: assetPath(game.catalogCover),
       assets: [...game.assets],
     };
   }

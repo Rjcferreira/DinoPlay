@@ -30,9 +30,9 @@ jobs:
       - run: node scripts/validate-play-release.mjs
       - name: Publicar catálogo apenas quando toda a revisão passar
         run: |
-          if git diff --quiet -- games/registry.json games/catalog.json; then exit 0; fi
+          if git diff --quiet -- games/registry.json games/catalog.json assets/game-covers; then exit 0; fi
           git config user.name "DinoPlay Update Bot"
           git config user.email "actions@users.noreply.github.com"
-          git add games/registry.json games/catalog.json
+          git add games/registry.json games/catalog.json assets/game-covers
           git commit -m "Update approved games automatically"
           git push

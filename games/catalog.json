@@ -59,6 +59,7 @@
       "migration": "legacy-native-snapshot",
       "runtime": "sandbox",
       "size": "12 MB",
+      "catalogCover": "assets/game-covers/puzzle.png?v=1.0.0",
       "repository": "https://github.com/Rjcferreira/dinoplay-puzzles",
       "sourceBase": "https://raw.githubusercontent.com/Rjcferreira/dinoplay-puzzles/v1.0.0/",
       "pageBase": "https://rjcferreira.github.io/dinoplay-puzzles/"
@@ -119,6 +120,7 @@
       "migration": "legacy-native-snapshot",
       "runtime": "sandbox",
       "size": "18 MB",
+      "catalogCover": "assets/game-covers/blocks.png?v=1.3.1",
       "repository": "https://github.com/Rjcferreira/dinoplay-block-world",
       "sourceBase": "https://raw.githubusercontent.com/Rjcferreira/dinoplay-block-world/v1.3.1/",
       "pageBase": "https://rjcferreira.github.io/dinoplay-block-world/"
@@ -179,6 +181,7 @@
       "migration": "legacy-native-snapshot",
       "runtime": "sandbox",
       "size": "9 MB",
+      "catalogCover": "assets/game-covers/race.png?v=1.2.1",
       "repository": "https://github.com/Rjcferreira/dinoplay-adventure-city",
       "sourceBase": "https://raw.githubusercontent.com/Rjcferreira/dinoplay-adventure-city/v1.2.1/",
       "pageBase": "https://rjcferreira.github.io/dinoplay-adventure-city/"
@@ -287,6 +290,7 @@
       ],
       "license": "MIT",
       "author": "Master-Devs171",
+      "catalogCover": "assets/game-covers/cobrinhas.jpg?v=4.4.8",
       "repository": "https://github.com/Master-Devs171/cobrinhas-do-jardim",
       "sourceBase": "https://raw.githubusercontent.com/Master-Devs171/cobrinhas-do-jardim/a1305396096f64babb93450aa3cf0c77d8740108/",
       "pageBase": "https://master-devs171.github.io/cobrinhas-do-jardim/"
@@ -329,6 +333,7 @@
       "author": "DinoPlay Team",
       "runtime": "sandbox",
       "size": "10 MB",
+      "catalogCover": "assets/game-covers/dinolaunch.png?v=1.5.2",
       "repository": "https://github.com/Rjcferreira/dinoplay-dinolaunch",
       "sourceBase": "https://raw.githubusercontent.com/Rjcferreira/dinoplay-dinolaunch/v1.5.2/",
       "pageBase": "https://rjcferreira.github.io/dinoplay-dinolaunch/"
@@ -368,6 +373,7 @@
       "author": "DinoPlay Team",
       "runtime": "sandbox",
       "size": "5 MB",
+      "catalogCover": "assets/game-covers/dinobubbles.png?v=1.0.0",
       "repository": "https://github.com/Rjcferreira/dinoplay-dinobubbles",
       "sourceBase": "https://raw.githubusercontent.com/Rjcferreira/dinoplay-dinobubbles/v1.0.0/",
       "pageBase": "https://rjcferreira.github.io/dinoplay-dinobubbles/"
@@ -414,6 +420,7 @@
       "author": "DinoPlay Team",
       "runtime": "sandbox",
       "size": "23 MB",
+      "catalogCover": "assets/game-covers/dinomusic.png?v=1.0.0",
       "repository": "https://github.com/Rjcferreira/dinoplay-dinomusic",
       "sourceBase": "https://raw.githubusercontent.com/Rjcferreira/dinoplay-dinomusic/v1.0.0/",
       "pageBase": "https://rjcferreira.github.io/dinoplay-dinomusic/"
@@ -453,6 +460,7 @@
       "author": "DinoPlay Team",
       "runtime": "sandbox",
       "size": "4 MB",
+      "catalogCover": "assets/game-covers/dinojam.png?v=2.1.0",
       "repository": "https://github.com/Rjcferreira/dinoplay-dinojam",
       "sourceBase": "https://raw.githubusercontent.com/Rjcferreira/dinoplay-dinojam/v2.1.0/",
       "pageBase": "https://rjcferreira.github.io/dinoplay-dinojam/"
@@ -492,6 +500,7 @@
       "author": "DinoPlay Team",
       "runtime": "sandbox",
       "size": "5 MB",
+      "catalogCover": "assets/game-covers/dinoacademy.png?v=1.0.0",
       "repository": "https://github.com/Rjcferreira/dinoplay-dinoacademy",
       "sourceBase": "https://raw.githubusercontent.com/Rjcferreira/dinoplay-dinoacademy/v1.0.0/",
       "pageBase": "https://rjcferreira.github.io/dinoplay-dinoacademy/"
@@ -530,6 +539,7 @@
       "author": "DinoPlay Team",
       "runtime": "sandbox",
       "size": "16 MB",
+      "catalogCover": "assets/game-covers/dinocontos.png?v=1.0.0",
       "repository": "https://github.com/Rjcferreira/dinoplay-dinocontos",
       "sourceBase": "https://raw.githubusercontent.com/Rjcferreira/dinoplay-dinocontos/v1.0.0/",
       "pageBase": "https://rjcferreira.github.io/dinoplay-dinocontos/"

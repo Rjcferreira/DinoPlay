@@ -1,11 +1,11 @@
-const CACHE = "dinoplay-core-v167";
+const CACHE = "dinoplay-core-v168";
 const FILES = [
   "./",
   "./index.html",
   "./style.css?v=15",
-  "./platform.css?v=15",
+  "./platform.css?v=16",
   "./game-runtime.css?v=1",
-  "./platform.js?v=26",
+  "./platform.js?v=27",
   "./language.css?v=1",
   "./i18n.js?v=8",
   "./parental.js?v=1",
@@ -31,7 +31,14 @@ self.addEventListener("install", (e) =>
   e.waitUntil(
     caches
       .open(CACHE)
-      .then((c) => c.addAll(FILES))
+      .then(async (c) => {
+        await c.addAll(FILES);
+        const response = await fetch("./games/catalog.json", { cache: "no-store" });
+        if (!response.ok) throw new Error("catalog-cover-cache");
+        const data = await response.json();
+        const covers = (data.games || []).map((game) => `./${game.catalogCover}`);
+        if (covers.length) await c.addAll(covers);
+      })
       .then(() => self.skipWaiting()),
   ),
 );

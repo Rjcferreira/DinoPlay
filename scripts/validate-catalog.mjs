@@ -20,6 +20,7 @@ for(const game of data.games){
   if(!/^\d+(?:\.\d+)? (?:KB|MB)$/.test(game.size||''))fail(`${game.id}: tamanho`);
   if(game.offline!==true||typeof game.multiplayer!=='boolean')fail(`${game.id}: offline/multiplayer`);
   if(!safePath(game.cover)||!Array.isArray(game.assets)||!game.assets.length||!game.assets.every(safePath))fail(`${game.id}: recursos locais`);
+  if(!safePath(game.catalogCover)||!new RegExp(`^assets/game-covers/${game.id}\\.(?:jpg|jpeg|png|webp|avif)\\?v=${game.version.replaceAll('.', '\\.')}$`).test(game.catalogCover))fail(`${game.id}: capa local do catálogo`);
   if(!safePath(game.entry))fail(`${game.id}: entry sandbox`);
   if(!/^https:\/\/github\.com\/[A-Za-z0-9-]{1,39}\/[A-Za-z0-9._-]{3,100}$/.test(game.repository||''))fail(`${game.id}: repositório`);
   if(!/^https:\/\/raw\.githubusercontent\.com\/[A-Za-z0-9-]{1,39}\/[A-Za-z0-9._-]{3,100}\/(?:v\d+\.\d+\.\d+|[a-f0-9]{40})\/$/.test(game.sourceBase||''))fail(`${game.id}: origem da versão`);
