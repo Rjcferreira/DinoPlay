@@ -1,18 +1,18 @@
-const CACHE = "dinoplay-core-v169";
+const CACHE = "dinoplay-core-v170";
 const FILES = [
   "./",
   "./index.html",
   "./style.css?v=15",
   "./platform.css?v=17",
   "./game-runtime.css?v=1",
-  "./platform.js?v=28",
+  "./platform.js?v=29",
   "./language.css?v=1",
   "./i18n.js?v=9",
   "./parental.js?v=1",
   "./multiplayer-core.js?v=3",
   "./multiplayer.js?v=9",
   "./shell.js?v=1",
-  "./games/catalog.json?v=5",
+  "./games/catalog.json?v=6",
   "./version.json",
   "./dinoplay-v23.webmanifest",
   "./dinoplay-v23-192.png",
@@ -112,7 +112,7 @@ self.addEventListener("fetch", (e) => {
         .catch(() =>
           caches
             .match(e.request)
-            .then((r) => r || caches.match("./games/catalog.json?v=5")),
+            .then((r) => r || caches.match("./games/catalog.json?v=6")),
         ),
     );
     return;

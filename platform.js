@@ -1046,8 +1046,15 @@
     document.body.classList.remove("dp-shell");
     const frame = overlay.querySelector("iframe"),
       storageName = `dinoPlayCommunity:${id}`;
+    const contentCacheName = `dinoplay-content-${id}`,
+      contentUrls = new Set(),
+      repository = String(game.repository || "").match(/^https:\/\/github\.com\/([^/]+)\/([^/]+)\/?$/i),
+      contentPrefix = repository
+        ? `https://raw.githubusercontent.com/${repository[1]}/${repository[2]}/main/content/`
+        : "";
     const close = () => {
       window.removeEventListener("message", receive);
+      contentUrls.forEach((value) => URL.revokeObjectURL(value));
       overlay.remove();
       document.body.classList.add("dp-shell");
       render();
@@ -1064,7 +1071,7 @@
         return {};
       }
     };
-    const receive = (event) => {
+    const receive = async (event) => {
       const request = event.data;
       if (
         event.source !== frame.contentWindow ||
@@ -1081,6 +1088,7 @@
             language: document.documentElement.lang || "pt-PT",
             capabilities: {
               storage: (game.permissions || []).includes("storage"),
+              content: Boolean(contentPrefix),
               entitlements: (game.permissions || []).includes("entitlements"),
               multiplayer:
                 game.multiplayer === true &&
@@ -1109,6 +1117,32 @@
             throw new Error("storage-limit");
           localStorage.setItem(storageName, encoded);
           return reply(request, true, true);
+        }
+        if (request.action.startsWith("content:")) {
+          if (!(game.permissions || []).includes("storage") || !contentPrefix)
+            throw new Error("permission-denied");
+          const resourceUrl = String(request.payload?.url || "");
+          if (!resourceUrl.startsWith(contentPrefix) || resourceUrl.includes(".."))
+            throw new Error("invalid-content-url");
+          const cache = await caches.open(contentCacheName);
+          if (request.action === "content:download") {
+            const response = await fetch(resourceUrl, { cache: "no-store" });
+            if (!response.ok) throw new Error(`download-${response.status}`);
+            await cache.put(resourceUrl, response);
+            return reply(request, true, true);
+          }
+          if (request.action === "content:has")
+            return reply(request, true, Boolean(await cache.match(resourceUrl)));
+          if (request.action === "content:remove")
+            return reply(request, true, await cache.delete(resourceUrl));
+          if (request.action === "content:url") {
+            const response = await cache.match(resourceUrl);
+            if (!response) throw new Error("content-not-installed");
+            const objectUrl = URL.createObjectURL(await response.blob());
+            contentUrls.add(objectUrl);
+            return reply(request, true, objectUrl);
+          }
+          throw new Error("unknown-action");
         }
         if (request.action === "multiplayer:status")
           return reply(request, true, {

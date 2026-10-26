@@ -382,7 +382,7 @@
       "schemaVersion": 1,
       "id": "dinomusic",
       "name": "DinoMusic",
-      "version": "2.0.3",
+      "version": "2.1.0",
       "entry": "index.html",
       "category": "music",
       "age": "3+",
@@ -415,9 +415,9 @@
       "author": "DinoPlay Team",
       "runtime": "sandbox",
       "size": "3 MB",
-      "catalogCover": "assets/game-covers/dinomusic.png?v=2.0.3",
+      "catalogCover": "assets/game-covers/dinomusic.png?v=2.1.0",
       "repository": "https://github.com/Rjcferreira/dinoplay-dinomusic",
-      "sourceBase": "https://raw.githubusercontent.com/Rjcferreira/dinoplay-dinomusic/v2.0.3/",
+      "sourceBase": "https://raw.githubusercontent.com/Rjcferreira/dinoplay-dinomusic/v2.1.0/",
       "pageBase": "https://rjcferreira.github.io/dinoplay-dinomusic/"
     },
     {
