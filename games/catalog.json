@@ -469,12 +469,12 @@
       "schemaVersion": 1,
       "id": "dinoacademy",
       "name": "DinoAcademy",
-      "version": "1.0.0",
+      "version": "1.1.1",
       "entry": "index.html",
       "category": "learn",
-      "age": "5+",
+      "age": "3+",
       "cover": "cover.png",
-      "description": "Explora números, letras, lógica, memória, formas e natureza em 30 desafios educativos.",
+      "description": "Dois módulos por idade com voz, números, linguagem, lógica, memória, formas e natureza em 60 desafios.",
       "offline": true,
       "multiplayer": false,
       "permissions": [
@@ -492,6 +492,7 @@
       "assets": [
         "index.html",
         "style.css",
+        "modules.css",
         "game.js",
         "cover.png",
         "sdk/dinoplay-game-sdk.js"
@@ -500,9 +501,9 @@
       "author": "DinoPlay Team",
       "runtime": "sandbox",
       "size": "5 MB",
-      "catalogCover": "assets/game-covers/dinoacademy.png?v=1.0.0",
+      "catalogCover": "assets/game-covers/dinoacademy.png?v=1.1.1",
       "repository": "https://github.com/Rjcferreira/dinoplay-dinoacademy",
-      "sourceBase": "https://raw.githubusercontent.com/Rjcferreira/dinoplay-dinoacademy/v1.0.0/",
+      "sourceBase": "https://raw.githubusercontent.com/Rjcferreira/dinoplay-dinoacademy/v1.1.1/",
       "pageBase": "https://rjcferreira.github.io/dinoplay-dinoacademy/"
     },
     {
