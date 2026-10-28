@@ -13,13 +13,13 @@ async function manifestFor(item) {
   const owner = item.owner || registry.owner;
   const local = resolve(root, "external-repos", item.repo, "manifest.json");
   try {
-    return JSON.parse(await readFile(local, "utf8"));
-  } catch {
-    const url = `https://raw.githubusercontent.com/${owner}/${item.repo}/${item.tag}/manifest.json`;
-    const response = await fetch(url, { headers: { "User-Agent": "DinoPlay-Catalog" } });
-    if (!response.ok) throw new Error(`${item.repo}: manifesto ${response.status}`);
-    return response.json();
-  }
+    const manifest = JSON.parse(await readFile(local, "utf8"));
+    if (`v${manifest.version}` === item.tag) return manifest;
+  } catch {}
+  const url = `https://raw.githubusercontent.com/${owner}/${item.repo}/${item.tag}/manifest.json`;
+  const response = await fetch(url, { headers: { "User-Agent": "DinoPlay-Catalog" } });
+  if (!response.ok) throw new Error(`${item.repo}: manifesto ${response.status}`);
+  return response.json();
 }
 
 const games = [];

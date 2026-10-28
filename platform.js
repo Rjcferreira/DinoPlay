@@ -1041,7 +1041,13 @@
     const overlay = document.createElement("section");
     overlay.className = "dp-runtime";
     const launchUrl = await installedGameUrl(game);
-    overlay.innerHTML = `<header><b>${safeText(game.name)}</b><button type="button" aria-label="Fechar jogo">✕</button></header><iframe title="${safeText(game.name)}" sandbox="allow-scripts allow-pointer-lock" allow="fullscreen" src="${safeText(launchUrl)}"></iframe>`;
+    // Android serves installed packages through Capacitor's private local
+    // origin. Native frames need that origin for ES modules, JSON, WebGL and
+    // media; browser frames keep the stricter opaque-origin sandbox.
+    const gameSandbox = nativeMode
+      ? "allow-scripts allow-same-origin allow-pointer-lock"
+      : "allow-scripts allow-pointer-lock";
+    overlay.innerHTML = `<header><b>${safeText(game.name)}</b><button type="button" aria-label="Fechar jogo">✕</button></header><iframe title="${safeText(game.name)}" sandbox="${gameSandbox}" allow="fullscreen" src="${safeText(launchUrl)}"></iframe>`;
     document.body.appendChild(overlay);
     document.body.classList.remove("dp-shell");
     const frame = overlay.querySelector("iframe"),

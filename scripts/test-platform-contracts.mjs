@@ -89,8 +89,13 @@ requireText(
 );
 requireText(
   platform,
-  'sandbox="allow-scripts allow-pointer-lock"',
+  ': "allow-scripts allow-pointer-lock"',
   "sandbox sem acesso à origem",
+);
+requireText(
+  platform,
+  '? "allow-scripts allow-same-origin allow-pointer-lock"',
+  "origem local apenas no Android nativo",
 );
 requireText(
   platform,
