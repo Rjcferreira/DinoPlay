@@ -34,14 +34,17 @@ async function githubJson(path) {
   return response.json();
 }
 async function latestStableTag(owner, repo) {
+  const candidates = [];
   try {
     const release = await githubJson(`/repos/${owner}/${repo}/releases/latest`);
-    if (!release.draft && !release.prerelease && semver(release.tag_name)) return release.tag_name;
+    if (!release.draft && !release.prerelease && semver(release.tag_name))
+      candidates.push(release.tag_name);
   } catch (error) {
     if (!String(error.message).includes("GitHub 404")) throw error;
   }
   const tags = await githubJson(`/repos/${owner}/${repo}/tags?per_page=100`);
-  return tags.map((item) => item.name).filter(semver).sort((a, b) => {
+  candidates.push(...tags.map((item) => item.name).filter(semver));
+  return candidates.sort((a, b) => {
     const av = semver(a), bv = semver(b);
     for (let i = 0; i < 3; i++) if (av[i] !== bv[i]) return bv[i] - av[i];
     return 0;
