@@ -1,5 +1,7 @@
 (() => {
   const gameCache = "dinoplay-games-v1";
+  const publicAppBase = "https://rjcferreira.github.io/DinoPlay/";
+  const publicCatalogUrl = `${publicAppBase}games/catalog.json`;
   const gameCacheName = (id, version) =>
     `dinoplay-games-v2-${id}-${String(version).replace(/[^0-9.]/g, "")}`;
   let catalog = {
@@ -202,7 +204,7 @@
     return window.Capacitor.convertFileSrc(result.uri);
   }
   const tr = (value) => window.DinoI18n?.t(value) || value;
-  function normalizeGame(game) {
+  function normalizeGame(game, remoteCatalog = false) {
     if (
       !game ||
       !/^[-a-z0-9]{3,32}$/.test(game.id) ||
@@ -229,7 +231,9 @@
       ...game,
       icon: game.icon || style.icon,
       tone: game.tone || style.tone,
-      cover: assetPath(game.catalogCover),
+      cover: remoteCatalog
+        ? new URL(game.catalogCover, publicAppBase).href
+        : assetPath(game.catalogCover),
       assets: [...game.assets],
     };
   }
@@ -237,16 +241,29 @@
     if (catalogRefreshBusy) return;
     catalogRefreshBusy = true;
     try {
-      const response = await fetch(`./games/catalog.json?t=${Date.now()}`, {
-        cache: "no-store",
-      });
-      if (!response.ok) throw new Error("catalog");
+      const sources = nativeMode
+        ? [publicCatalogUrl, "./games/catalog.json"]
+        : ["./games/catalog.json"];
+      let response = null;
+      let remoteCatalog = false;
+      for (const source of sources) {
+        try {
+          const candidate = await fetch(`${source}?t=${Date.now()}`, {
+            cache: "no-store",
+          });
+          if (!candidate.ok) continue;
+          response = candidate;
+          remoteCatalog = source === publicCatalogUrl;
+          break;
+        } catch {}
+      }
+      if (!response) throw new Error("catalog");
       const data = await response.json();
       if (data.catalogVersion !== 2 || !Array.isArray(data.games))
         throw new Error("catalog-version");
       const next = {};
       data.games.forEach((item) => {
-        const game = normalizeGame(item);
+        const game = normalizeGame(item, remoteCatalog);
         if (next[game.id]) throw new Error("duplicate-game");
         next[game.id] = game;
       });

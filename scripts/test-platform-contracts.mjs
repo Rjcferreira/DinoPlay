@@ -58,6 +58,16 @@ requireText(
 );
 requireText(
   platform,
+  'https://rjcferreira.github.io/DinoPlay/',
+  "catálogo público usado pela aplicação Android",
+);
+requireText(
+  platform,
+  '? [publicCatalogUrl, "./games/catalog.json"]',
+  "fallback interno quando o catálogo público estiver indisponível",
+);
+requireText(
+  platform,
   "[A-Za-z0-9-]{1,39}",
   "repositórios comunitários mantêm o proprietário original",
 );
@@ -175,7 +185,7 @@ requireText(
 );
 requireText(
   index,
-  "connect-src 'self' https://raw.githubusercontent.com https://dinoplay-multiplayer.dinoplay-multiplayer.workers.dev",
+  "connect-src 'self' https://rjcferreira.github.io https://raw.githubusercontent.com https://dinoplay-multiplayer.dinoplay-multiplayer.workers.dev",
   "ligações limitadas aos repositórios aprovados e ao serviço multiplayer",
 );
 requireText(
